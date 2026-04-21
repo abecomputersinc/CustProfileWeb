@@ -1,0 +1,390 @@
+/* Classic Windows 2000 / VB6 Style */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-size: 11px;
+  background: #008080;
+  color: #000;
+  min-height: 100vh;
+}
+
+/* ── 3-D HELPERS ─────────────────────────────────────────────────── */
+.raised {
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  box-shadow: inset 1px 1px 0 #dfdfdf;
+}
+.sunken {
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+.flat-border { border: 1px solid #808080; }
+
+/* ── WINDOW ──────────────────────────────────────────────────────── */
+.window {
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.titlebar {
+  background: linear-gradient(to right, #000080, #1084d0);
+  color: #fff;
+  padding: 3px 6px 3px 4px;
+  font-weight: bold;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+  flex-shrink: 0;
+}
+.titlebar-icon { font-size: 14px; }
+.titlebar-title { flex: 1; }
+.titlebar-btns { display: flex; gap: 2px; }
+.titlebar-btn {
+  background: #d4d0c8;
+  border: 1px solid;
+  border-color: #fff #808080 #808080 #fff;
+  color: #000;
+  width: 16px; height: 14px;
+  font-size: 9px; font-weight: bold;
+  cursor: pointer; line-height: 12px; text-align: center;
+  padding: 0;
+}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 6px;
+  gap: 4px;
+}
+
+#main-window {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.window-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  gap: 4px;
+}
+
+/* ── TOOLBAR / SEARCH ────────────────────────────────────────────── */
+#search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+#search-bar label { font-size: 11px; white-space: nowrap; }
+
+/* ── MAIN SPLIT ──────────────────────────────────────────────────── */
+#main-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 4px;
+}
+
+/* ── CUSTOMER LIST ───────────────────────────────────────────────── */
+#cust-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#cust-panel .panel-title {
+  background: #d4d0c8;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-bottom: 1px solid #808080;
+}
+#cust-list-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+#cust-nav {
+  display: flex; align-items: center; gap: 2px;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+#cust-nav .nav-status {
+  background: #fff; border: 1px solid #808080;
+  padding: 1px 4px; flex: 1; font-size: 10px;
+}
+#cust-btns { display: flex; gap: 2px; flex-shrink: 0; }
+
+/* ── DETAIL PANEL ────────────────────────────────────────────────── */
+#detail-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#detail-panel.hidden { display: none; }
+#no-selection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #808080;
+  font-size: 13px;
+}
+
+/* ── CUSTOMER FIELDS ─────────────────────────────────────────────── */
+#cust-fields {
+  background: #d4d0c8;
+  flex-shrink: 0;
+  overflow-y: auto;
+  max-height: 340px;
+}
+.field-frame {
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  padding: 4px 6px 6px;
+  margin: 4px;
+  position: relative;
+}
+.field-frame-title {
+  position: absolute; top: -7px; left: 6px;
+  background: #d4d0c8; padding: 0 2px; font-size: 10px;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 110px 1fr 110px 1fr;
+  gap: 2px 6px;
+  align-items: center;
+}
+.field-grid-2 {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 2px 6px;
+  align-items: center;
+}
+.field-grid-3 {
+  display: grid;
+  grid-template-columns: 110px 1fr 80px 1fr 80px 1fr;
+  gap: 2px 4px;
+  align-items: center;
+}
+.flabel { font-size: 11px; text-align: right; white-space: nowrap; }
+.fspan2 { grid-column: span 3; }
+.fspan1 { grid-column: span 1; }
+
+/* ── TABS ────────────────────────────────────────────────────────── */
+#sub-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid #808080;
+  flex-shrink: 0;
+}
+.tab {
+  padding: 2px 10px;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  margin-right: 2px;
+  cursor: pointer;
+  background: #b8b4ac;
+  position: relative;
+  bottom: -2px;
+  font-size: 11px;
+}
+.tab.active {
+  background: #d4d0c8;
+  border-bottom-color: #d4d0c8;
+  z-index: 1;
+  font-weight: bold;
+}
+.tab-content { display: none; flex: 1; min-height: 0; flex-direction: column; }
+.tab-content.active { display: flex; }
+
+.tab-toolbar {
+  display: flex; gap: 2px; padding: 3px 2px; flex-shrink: 0;
+  border-bottom: 1px solid #808080;
+}
+.grid-wrap {
+  flex: 1; min-height: 0; overflow: auto;
+}
+
+/* ── DATAGRID TABLE ──────────────────────────────────────────────── */
+.datagrid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  min-width: 400px;
+}
+.datagrid th {
+  background: #d4d0c8;
+  border: 1px solid #808080;
+  padding: 2px 6px;
+  text-align: left;
+  font-weight: bold;
+  white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+.datagrid td {
+  border-right: 1px solid #d0ccc8;
+  border-bottom: 1px solid #d0ccc8;
+  padding: 1px 6px;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.datagrid tbody tr { cursor: pointer; }
+.datagrid tbody tr:hover { background: #ddeeff; }
+.datagrid tbody tr.selected { background: #000080; color: #fff; }
+.datagrid tbody tr.selected td { border-color: #000060; }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+button, .btn {
+  font-family: Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-size: 11px;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  padding: 2px 10px;
+  cursor: pointer;
+  min-width: 60px;
+  height: 22px;
+  white-space: nowrap;
+}
+button:hover { background: #e0dcda; }
+button:active, button.pressed {
+  border-color: #808080 #fff #fff #808080;
+  padding: 3px 9px 1px 11px;
+}
+button:disabled { color: #808080; cursor: default; }
+button.nav-btn { min-width: 24px; padding: 2px 4px; font-size: 10px; }
+
+/* ── FORM INPUTS ─────────────────────────────────────────────────── */
+input[type="text"], input[type="date"], select, textarea {
+  font-family: Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-size: 11px;
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  background: #fff;
+  padding: 1px 3px;
+  height: 20px;
+  width: 100%;
+}
+input[type="text"]:read-only, input.readonly {
+  background: #d4d0c8;
+}
+textarea {
+  height: auto;
+  resize: vertical;
+}
+select { height: 20px; padding: 0 2px; }
+input[type="checkbox"] { width: auto; height: auto; }
+
+/* ── STATUS BAR ──────────────────────────────────────────────────── */
+#status-bar {
+  background: #d4d0c8;
+  border-top: 1px solid #808080;
+  padding: 2px 6px;
+  font-size: 10px;
+  display: flex; gap: 8px;
+  flex-shrink: 0;
+}
+.status-panel {
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  padding: 1px 6px;
+}
+
+/* ── MODAL OVERLAY ───────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-window {
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+  min-width: 400px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-body {
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-btns {
+  padding: 4px 8px;
+  display: flex;
+  gap: 4px;
+  border-top: 1px solid #808080;
+  background: #d4d0c8;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ── MODAL FORM LAYOUTS ──────────────────────────────────────────── */
+.form-row {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin-bottom: 3px;
+}
+.form-label {
+  min-width: 120px; text-align: right;
+  font-size: 11px; padding-top: 2px;
+  flex-shrink: 0;
+}
+.form-field { flex: 1; min-width: 0; }
+.form-row textarea { height: 60px; }
+.form-row.large textarea { height: 90px; }
+
+/* ── SETTINGS TABLE ──────────────────────────────────────────────── */
+.settings-grid-wrap { flex: 1; min-height: 0; overflow: auto; max-height: 400px; }
+.settings-grid input[type="text"] { width: 100%; }
+
+/* ── MISC ────────────────────────────────────────────────────────── */
+.sep { border: none; border-top: 1px solid #808080; margin: 3px 0; }
+.badge {
+  display: inline-block;
+  background: #ff0000; color: #fff;
+  font-size: 9px; font-weight: bold;
+  border-radius: 2px; padding: 0 3px;
+  margin-left: 3px;
+}
+.badge.open { background: #cc0000; }
+.badge.close { background: #008000; }
+.inline-group { display: flex; gap: 4px; align-items: center; }
+
+/* scrollbars classic look */
+::-webkit-scrollbar { width: 16px; height: 16px; }
+::-webkit-scrollbar-track { background: #d4d0c8; }
+::-webkit-scrollbar-thumb { background: #a0a0a0; border: 3px solid #d4d0c8; }
+::-webkit-scrollbar-button { background: #d4d0c8; border: 1px solid #808080; display: block; height: 16px; }

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Profile</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════════════════════════ MAIN WINDOW ══════════════════════════════ -->
+<div id="main-window" class="window">
+  <div class="titlebar">
+    <span class="titlebar-icon">🖥</span>
+    <span class="titlebar-title">Customer Profile</span>
+  </div>
+
+  <!-- Search bar -->
+  <div style="background:#d4d0c8;padding:4px;border-bottom:1px solid #808080;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+    <label>Search Name:</label>
+    <input type="text" id="srch-name" style="width:160px" placeholder="Customer / Contact name"
+           onkeydown="if(event.key==='Enter')doSearch()">
+    <label>Phone:</label>
+    <input type="text" id="srch-phone" style="width:120px" placeholder="Phone / Fax"
+           onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">🔍 Search</button>
+    <button onclick="clearSearch()">Clear</button>
+    <span style="flex:1"></span>
+    <button onclick="openSettings()">⚙ Settings</button>
+    <button onclick="openNotesWindow()">Notes</button>
+  </div>
+
+  <div class="window-body" style="flex-direction:row;gap:0;flex:1;min-height:0">
+
+    <!-- ── LEFT: Customer List ───────────────────────────────────── -->
+    <div id="cust-panel" class="raised" style="display:flex;flex-direction:column">
+      <div class="panel-title">📋 Customer List</div>
+      <div id="cust-list-wrap" class="sunken" style="flex:1;min-height:0;overflow-y:auto">
+        <table class="datagrid" id="cust-grid">
+          <thead>
+            <tr>
+              <th style="width:110px">Phone</th>
+              <th>Customer Name</th>
+            </tr>
+          </thead>
+          <tbody id="cust-tbody"></tbody>
+        </table>
+      </div>
+      <div id="cust-nav" style="display:flex;align-items:center;gap:2px;padding:2px;background:#d4d0c8;border-top:1px solid #808080">
+        <button class="nav-btn" onclick="custNav('first')" title="First">|◄</button>
+        <button class="nav-btn" onclick="custNav('prev')"  title="Previous">◄</button>
+        <span id="cust-status" class="nav-status" style="background:#fff;border:1px inset;padding:1px 4px;font-size:10px;flex:1;text-align:center">No records</span>
+        <button class="nav-btn" onclick="custNav('next')"  title="Next">►</button>
+        <button class="nav-btn" onclick="custNav('last')"  title="Last">►|</button>
+      </div>
+      <div id="cust-btns" style="display:flex;gap:2px;padding:3px;background:#d4d0c8;border-top:1px solid #808080;flex-wrap:wrap">
+        <button onclick="openCustModal('add')">Add</button>
+        <button id="btn-edit-cust" onclick="openCustModal('edit')" disabled>Edit</button>
+        <button id="btn-del-cust"  onclick="deleteCustomer()" disabled>Delete</button>
+        <button onclick="loadCustomers()">Refresh</button>
+      </div>
+    </div>
+
+    <div style="width:4px"></div>
+
+    <!-- ── RIGHT: Detail Panel ──────────────────────────────────── -->
+    <div id="detail-panel" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0;overflow:hidden">
+
+      <!-- No selection placeholder -->
+      <div id="no-selection" style="flex:1;display:flex;align-items:center;justify-content:center;color:#808080;font-size:13px">
+        ← Select a customer from the list
+      </div>
+
+      <!-- SUB TABS (full height) -->
+      <div id="sub-tabs" style="display:none;flex:1;min-height:0;flex-direction:column">
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab('custinfo')">Customer</div>
+          <div class="tab" onclick="switchTab('calllog')">Call Log</div>
+          <div class="tab" onclick="switchTab('hardware')">Hardware</div>
+          <div class="tab" onclick="switchTab('swfix')">SW Fix</div>
+          <div class="tab" onclick="switchTab('hwrma')">HW RMA</div>
+        </div>
+
+        <!-- CUSTOMER INFO TAB -->
+        <div id="tab-custinfo" class="tab-content active raised" style="display:flex;overflow-y:auto;flex-direction:column">
+
+          <!-- Customer Info frame -->
+          <div class="field-frame" style="margin-bottom:3px;flex-shrink:0">
+            <span class="field-frame-title">Customer Info</span>
+            <div class="field-grid" style="margin-top:4px">
+              <span class="flabel">Phone:</span>
+              <div style="display:flex;gap:4px">
+                <input type="text" id="d-Phone_num" class="readonly" readonly style="width:110px">
+                <span style="align-self:center;font-size:10px">Ext:</span>
+                <input type="text" id="d-Ext1" class="readonly" readonly style="width:50px">
+              </div>
+              <span class="flabel">Contract:</span>
+              <input type="text" id="d-Contract_Service" class="readonly" readonly>
+
+              <span class="flabel">Customer:</span>
+              <input type="text" id="d-Cust_Name" class="readonly" readonly>
+              <span class="flabel">Contact Person:</span>
+              <input type="text" id="d-Contact_Person" class="readonly" readonly>
+
+              <span class="flabel">Street:</span>
+              <div></div>
+              <span class="flabel">Phone 2:</span>
+              <input type="text" id="d-Phone2" class="readonly" readonly>
+
+              <span class="flabel"></span>
+              <input type="text" id="d-Street" class="readonly" readonly>
+              <span class="flabel">Fax:</span>
+              <input type="text" id="d-Fax" class="readonly" readonly>
+
+              <span class="flabel">City:</span>
+              <input type="text" id="d-City" class="readonly" readonly>
+              <span class="flabel">Province:</span>
+              <input type="text" id="d-Province" class="readonly" readonly>
+
+              <span class="flabel">Postal Code:</span>
+              <input type="text" id="d-Postal_Code" class="readonly" readonly>
+              <span class="flabel">Industry:</span>
+              <input type="text" id="d-Industry" class="readonly" readonly>
+
+              <span class="flabel">EMail:</span>
+              <input type="text" id="d-EMail" class="readonly" readonly>
+              <span class="flabel">Remote Access:</span>
+              <input type="text" id="d-Remote_Access" class="readonly" readonly>
+            </div>
+          </div>
+
+          <!-- Warranty / Service frame -->
+          <div style="display:flex;gap:4px;margin:0 4px 3px;flex-shrink:0">
+            <div class="field-frame" style="flex:1">
+              <span class="field-frame-title">Warranty / Service</span>
+              <div class="field-grid-2" style="margin-top:4px">
+                <span class="flabel">HW Expiry:</span>
+                <input type="text" id="d-Warranty_Expiry_DateHW" class="readonly" readonly>
+                <span class="flabel">SW Expiry:</span>
+                <input type="text" id="d-Warranty_Expiry_DateSF" class="readonly" readonly>
+                <span class="flabel">Service Day:</span>
+                <input type="text" id="d-ServiceDay" class="readonly" readonly>
+                <span class="flabel">Service HR:</span>
+                <input type="text" id="d-ServiceHR" class="readonly" readonly>
+              </div>
+            </div>
+            <div class="field-frame" style="flex:1">
+              <span class="field-frame-title">Remote / Other</span>
+              <div class="field-grid-2" style="margin-top:4px">
+                <span class="flabel">Install Date:</span>
+                <input type="text" id="d-Installation_Date" class="readonly" readonly>
+                <span class="flabel">AnyDesk:</span>
+                <div style="display:flex;gap:3px;align-items:center">
+                  <input type="text" id="d-AnyDesk" class="readonly" readonly style="flex:1">
+                  <button onclick="openRemote('anydesk')" title="Connect via AnyDesk" style="min-width:0;padding:1px 5px;height:20px;font-size:10px">▶</button>
+                </div>
+                <span class="flabel">RustDesk:</span>
+                <div style="display:flex;gap:3px;align-items:center">
+                  <input type="text" id="d-RustDesk" class="readonly" readonly style="flex:1">
+                  <button onclick="openRemote('rustdesk')" title="Connect via RustDesk" style="min-width:0;padding:1px 5px;height:20px;font-size:10px">▶</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Installation Summary -->
+          <div class="field-frame" style="margin:0 4px 3px;flex:1;display:flex;flex-direction:column">
+            <span class="field-frame-title">Installation Summary</span>
+            <textarea id="d-InstallationSummary" class="readonly" readonly
+              style="width:100%;margin-top:4px;flex:1;min-height:80px;resize:none"></textarea>
+          </div>
+
+        </div><!-- /tab-custinfo -->
+
+        <!-- CALL LOG TAB -->
+        <div id="tab-calllog" class="tab-content active raised" style="display:flex">
+          <div class="tab-toolbar">
+            <button onclick="openSubModal('calllog','add')">Add</button>
+            <button onclick="openSubModal('calllog','edit')">Edit</button>
+            <button onclick="deleteSubRecord('calllog')">Delete</button>
+            <button onclick="loadTab('calllog')">Refresh</button>
+          </div>
+          <div class="grid-wrap sunken">
+            <table class="datagrid" id="grid-calllog">
+              <thead><tr>
+                <th>SeqNo</th><th>Date</th><th>Time</th><th>Hrs</th>
+                <th>Subject</th><th>Via</th><th>Status</th><th>Response</th>
+              </tr></thead>
+              <tbody id="tbody-calllog"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HARDWARE TAB -->
+        <div id="tab-hardware" class="tab-content raised">
+          <div class="tab-toolbar">
+            <button onclick="openSubModal('hardware','add')">Add</button>
+            <button onclick="openSubModal('hardware','edit')">Edit</button>
+            <button onclick="deleteSubRecord('hardware')">Delete</button>
+            <button onclick="loadTab('hardware')">Refresh</button>
+          </div>
+          <div class="grid-wrap sunken">
+            <table class="datagrid" id="grid-hardware">
+              <thead><tr>
+                <th>SeqNo</th><th>Device Name</th><th>CPU</th><th>Memory</th>
+                <th>HDD</th><th>MotherBoard</th><th>Monitor</th><th>Printer</th>
+              </tr></thead>
+              <tbody id="tbody-hardware"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SW FIX TAB -->
+        <div id="tab-swfix" class="tab-content raised">
+          <div class="tab-toolbar">
+            <button onclick="openSubModal('swfix','add')">Add</button>
+            <button onclick="openSubModal('swfix','edit')">Edit</button>
+            <button onclick="deleteSubRecord('swfix')">Delete</button>
+            <button onclick="loadTab('swfix')">Refresh</button>
+            <label style="margin-left:8px">Filter:
+              <select id="swfix-status-filter" onchange="loadTab('swfix')" style="width:80px;height:20px">
+                <option value="">All</option>
+                <option value="Open">Open</option>
+                <option value="Close">Close</option>
+                <option value="PD">PD</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid-wrap sunken">
+            <table class="datagrid" id="grid-swfix">
+              <thead><tr>
+                <th>Case#</th><th>Date</th><th>Software</th><th>Version</th>
+                <th>Problem</th><th>Handle By</th><th>Status</th>
+              </tr></thead>
+              <tbody id="tbody-swfix"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HW RMA TAB -->
+        <div id="tab-hwrma" class="tab-content raised">
+          <div class="tab-toolbar">
+            <button onclick="openSubModal('hwrma','add')">Add</button>
+            <button onclick="openSubModal('hwrma','edit')">Edit</button>
+            <button onclick="deleteSubRecord('hwrma')">Delete</button>
+            <button onclick="loadTab('hwrma')">Refresh</button>
+            <label style="margin-left:8px">Filter:
+              <select id="hwrma-status-filter" onchange="loadTab('hwrma')" style="width:80px;height:20px">
+                <option value="">All</option>
+                <option value="Open">Open</option>
+                <option value="Close">Close</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid-wrap sunken">
+            <table class="datagrid" id="grid-hwrma">
+              <thead><tr>
+                <th>RMA No</th><th>Date</th><th>Device</th><th>Problem</th>
+                <th>Handle By</th><th>Ship Date</th><th>Return Date</th><th>Status</th>
+              </tr></thead>
+              <tbody id="tbody-hwrma"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /sub-tabs -->
+
+    </div><!-- /detail-panel -->
+  </div><!-- /window-body split -->
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span class="status-panel" id="sb-msg">Ready</span>
+    <span class="status-panel" id="sb-count"></span>
+    <span class="status-panel" id="sb-time"></span>
+  </div>
+</div><!-- /main-window -->
+
+</div><!-- /app -->
+
+<!-- ═══════════════════ CUSTOMER ADD/EDIT MODAL ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-cust">
+  <div class="modal-window" style="width:640px">
+    <div class="titlebar">
+      <span class="titlebar-icon">👤</span>
+      <span class="titlebar-title" id="modal-cust-title">Customer</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-cust')">✕</button></div>
+    </div>
+    <div class="modal-body">
+
+      <div class="field-frame" style="margin-bottom:6px">
+        <span class="field-frame-title">Customer Info</span>
+        <div style="margin-top:4px">
+          <div style="display:grid;grid-template-columns:110px 140px 60px 80px 80px 1fr;gap:2px 4px;align-items:center;margin-bottom:2px">
+            <span class="flabel">Phone Num:</span>
+            <input type="text" id="m-Phone_num" maxlength="20">
+            <span class="flabel" style="text-align:left;padding-left:4px">Ext:</span>
+            <input type="text" id="m-Ext1" maxlength="10">
+            <span class="flabel" style="text-align:left;padding-left:4px">Contract:</span>
+            <input type="text" id="m-Contract_Service" maxlength="50">
+          </div>
+          <div class="form-row"><span class="form-label">Customer Name:</span><div class="form-field"><input type="text" id="m-Cust_Name" maxlength="100"></div></div>
+          <div class="form-row"><span class="form-label">Contact Person:</span><div class="form-field"><input type="text" id="m-Contact_Person" maxlength="100"></div></div>
+          <div class="form-row"><span class="form-label">Street:</span><div class="form-field"><input type="text" id="m-Street" maxlength="200"></div></div>
+          <div style="display:grid;grid-template-columns:110px 1fr 80px 1fr 90px 1fr;gap:2px 4px;align-items:center;margin-bottom:2px">
+            <span class="flabel">City:</span><input type="text" id="m-City" maxlength="50">
+            <span class="flabel" style="text-align:left;padding-left:4px">Province:</span><input type="text" id="m-Province" maxlength="50">
+            <span class="flabel" style="text-align:left;padding-left:4px">Postal:</span><input type="text" id="m-Postal_Code" maxlength="20">
+          </div>
+          <div style="display:grid;grid-template-columns:110px 1fr 80px 1fr;gap:2px 4px;align-items:center;margin-bottom:2px">
+            <span class="flabel">Phone 2:</span><input type="text" id="m-Phone2" maxlength="20">
+            <span class="flabel" style="text-align:left;padding-left:4px">Fax:</span><input type="text" id="m-Fax" maxlength="20">
+          </div>
+          <div style="display:grid;grid-template-columns:110px 1fr 80px 1fr;gap:2px 4px;align-items:center;margin-bottom:2px">
+            <span class="flabel">EMail:</span><input type="text" id="m-EMail" maxlength="100">
+            <span class="flabel" style="text-align:left;padding-left:4px">Industry:</span>
+            <select id="m-Industry" style="height:20px;width:100%"></select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div class="field-frame">
+          <span class="field-frame-title">Warranty</span>
+          <div style="margin-top:4px">
+            <div class="form-row"><span class="form-label" style="min-width:90px">HW Expiry:</span><div class="form-field"><input type="text" id="m-Warranty_Expiry_DateHW" maxlength="20" placeholder="yyyy/mm/dd"></div></div>
+            <div class="form-row"><span class="form-label" style="min-width:90px">SW Expiry:</span><div class="form-field"><input type="text" id="m-Warranty_Expiry_DateSF" maxlength="20" placeholder="yyyy/mm/dd"></div></div>
+          </div>
+        </div>
+        <div class="field-frame">
+          <span class="field-frame-title">Service</span>
+          <div style="margin-top:4px">
+            <div class="form-row"><span class="form-label" style="min-width:90px">Service Day:</span><div class="form-field"><select id="m-ServiceDay" style="height:20px;width:100%"></select></div></div>
+            <div class="form-row"><span class="form-label" style="min-width:90px">Service HR:</span><div class="form-field"><select id="m-ServiceHR" style="height:20px;width:100%"></select></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div class="field-frame">
+          <span class="field-frame-title">Remote Access</span>
+          <div style="margin-top:4px">
+            <div class="form-row"><span class="form-label" style="min-width:90px">Remote:</span><div class="form-field"><input type="text" id="m-Remote_Access" maxlength="50"></div></div>
+            <div class="form-row"><span class="form-label" style="min-width:90px">AnyDesk:</span><div class="form-field"><input type="text" id="m-AnyDesk" maxlength="40"></div></div>
+            <div class="form-row"><span class="form-label" style="min-width:90px">RustDesk:</span><div class="form-field"><input type="text" id="m-RustDesk" maxlength="40"></div></div>
+          </div>
+        </div>
+        <div class="field-frame">
+          <span class="field-frame-title">Dates</span>
+          <div style="margin-top:4px">
+            <div class="form-row"><span class="form-label" style="min-width:90px">Install Date:</span><div class="form-field"><input type="text" id="m-Installation_Date" maxlength="20" placeholder="yyyy/mm/dd"></div></div>
+            <div class="form-row"><span class="form-label" style="min-width:90px">URL Address:</span><div class="form-field"><input type="text" id="m-URLAddress" maxlength="200"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-frame" style="margin-bottom:6px">
+        <span class="field-frame-title">Credit Card Info</span>
+        <div style="margin-top:4px;display:grid;grid-template-columns:110px 1fr 90px 1fr;gap:2px 4px;align-items:center">
+          <span class="flabel">Type:</span><input type="text" id="m-CreditCardType" maxlength="20">
+          <span class="flabel" style="text-align:left;padding-left:4px">Number:</span><input type="text" id="m-CreditCardNum" maxlength="20">
+          <span class="flabel">Holder:</span><input type="text" id="m-CreditCardHolder" maxlength="50">
+          <span class="flabel" style="text-align:left;padding-left:4px">Exp Date:</span><input type="text" id="m-CreditCardExpDate" maxlength="10" placeholder="mm/yy">
+        </div>
+      </div>
+
+      <div class="field-frame">
+        <span class="field-frame-title">Installation Summary</span>
+        <textarea id="m-InstallationSummary" rows="8" style="width:100%;margin-top:4px;height:140px;resize:vertical"></textarea>
+      </div>
+
+    </div>
+    <div class="modal-btns">
+      <button id="btn-cust-save" onclick="saveCust()">💾 Save</button>
+      <button onclick="closeModal('modal-cust')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CALL LOG DETAIL MODAL ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-calllog">
+  <div class="modal-window" style="width:500px">
+    <div class="titlebar">
+      <span class="titlebar-icon">📞</span>
+      <span class="titlebar-title">Call Log</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-calllog')">✕</button></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><span class="form-label">Seq No:</span><div class="form-field"><input type="text" id="cl-SeqNo" class="readonly" readonly style="width:60px"></div></div>
+      <div class="form-row">
+        <span class="form-label">Date:</span>
+        <div class="form-field"><input type="text" id="cl-CallDate" maxlength="20" placeholder="yyyy/mm/dd" style="width:110px"></div>
+        <span class="form-label" style="min-width:60px">Time:</span>
+        <div class="form-field"><input type="text" id="cl-CallTime" maxlength="10" placeholder="HH:MM" style="width:70px"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Serv Hours:</span>
+        <div class="form-field"><input type="text" id="cl-ServHour" maxlength="10" style="width:70px"></div>
+        <span class="form-label" style="min-width:50px">Via:</span>
+        <div class="form-field">
+          <select id="cl-Via" style="height:20px;width:80px">
+            <option value="P">P - Phone</option>
+            <option value="V">V - On Site</option>
+            <option value="H">H - In Office</option>
+            <option value="E">E - Email</option>
+            <option value="R">R - Remote</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><span class="form-label">Subject:</span><div class="form-field"><input type="text" id="cl-Subject" maxlength="200"></div></div>
+      <div class="form-row large"><span class="form-label">Action:</span><div class="form-field"><textarea id="cl-Action" rows="4"></textarea></div></div>
+      <div class="form-row">
+        <span class="form-label">Response:</span>
+        <div class="form-field"><input type="text" id="cl-Response" maxlength="50" style="width:120px"></div>
+        <span class="form-label" style="min-width:60px">Status:</span>
+        <div class="form-field">
+          <select id="cl-Status" style="height:20px;width:80px">
+            <option value="OK">OK</option>
+            <option value="PD">PD</option>
+            <option value="NG">NG</option>
+            <option value="Open">Open</option>
+            <option value="Close">Close</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><span class="form-label">Handle By:</span><div class="form-field">
+        <select id="cl-HandleBy" style="height:20px;width:140px"></select>
+      </div></div>
+      <div class="form-row large"><span class="form-label">Remark:</span><div class="form-field"><textarea id="cl-Remark" rows="3"></textarea></div></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="saveSubRecord('calllog')">💾 Save</button>
+      <button onclick="closeModal('modal-calllog')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ HARDWARE DETAIL MODAL ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-hardware">
+  <div class="modal-window" style="width:520px">
+    <div class="titlebar">
+      <span class="titlebar-icon">🖥</span>
+      <span class="titlebar-title">Hardware</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-hardware')">✕</button></div>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:110px 1fr 90px 1fr;gap:3px 6px;align-items:center">
+        <span class="flabel">Seq No:</span><input type="text" id="hw-SeqNo" class="readonly" readonly style="width:80px">
+        <span class="flabel" style="text-align:left;padding-left:4px">Device Name:</span><input type="text" id="hw-Device_Name" maxlength="100">
+        <span class="flabel">MotherBoard:</span><input type="text" id="hw-MotherBoard" maxlength="100">
+        <span class="flabel" style="text-align:left;padding-left:4px">CPU:</span><input type="text" id="hw-CPU" maxlength="100">
+        <span class="flabel">Memory:</span><input type="text" id="hw-Memory" maxlength="100">
+        <span class="flabel" style="text-align:left;padding-left:4px">HDD:</span><input type="text" id="hw-HDD" maxlength="100">
+        <span class="flabel">Monitor:</span><input type="text" id="hw-Monitor" maxlength="100">
+        <span class="flabel" style="text-align:left;padding-left:4px">Keyboard:</span><input type="text" id="hw-KB" maxlength="100">
+        <span class="flabel">Graphic Card:</span><input type="text" id="hw-GraphicCard" maxlength="100">
+        <span class="flabel" style="text-align:left;padding-left:4px">Printer:</span><input type="text" id="hw-Printer" maxlength="100">
+        <span class="flabel">Scanner:</span><input type="text" id="hw-Scanner" maxlength="100">
+        <span class="flabel" style="text-align:left;padding-left:4px">Cash Drawer:</span><input type="text" id="hw-CashDrawer" maxlength="100">
+        <span class="flabel">Cust Provide:</span>
+        <select id="hw-CustomerProvide" style="height:20px;width:80px">
+          <option value="">No</option>
+          <option value="Y">Yes</option>
+        </select>
+        <span class="flabel" style="text-align:left;padding-left:4px">Borrow To:</span><input type="text" id="hw-BorrowTo" maxlength="50">
+      </div>
+      <div style="margin-top:4px">
+        <span class="flabel" style="text-align:left">Others:</span>
+        <textarea id="hw-Others" rows="3" style="width:100%;margin-top:2px"></textarea>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="saveSubRecord('hardware')">💾 Save</button>
+      <button onclick="closeModal('modal-hardware')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SW FIX DETAIL MODAL ═════════════════════════════════ -->
+<div class="modal-overlay" id="modal-swfix">
+  <div class="modal-window" style="width:500px">
+    <div class="titlebar">
+      <span class="titlebar-icon">💿</span>
+      <span class="titlebar-title">SW Fix</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-swfix')">✕</button></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <span class="form-label">Case No:</span>
+        <div class="form-field"><input type="text" id="sf-CaseNum" maxlength="20" style="width:100px"></div>
+        <span class="form-label" style="min-width:70px">Issue Date:</span>
+        <div class="form-field"><input type="text" id="sf-IssueDate" maxlength="20" placeholder="yyyy/mm/dd" style="width:110px"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Software:</span>
+        <div class="form-field"><select id="sf-SoftwareName" style="height:20px;width:160px"></select></div>
+        <span class="form-label" style="min-width:70px">Version:</span>
+        <div class="form-field"><input type="text" id="sf-Version" maxlength="50" style="width:80px"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Handle By:</span>
+        <div class="form-field"><select id="sf-HandleBy" style="height:20px;width:140px"></select></div>
+        <span class="form-label" style="min-width:70px">Method:</span>
+        <div class="form-field">
+          <select id="sf-DeliveryMethod" style="height:20px;width:100px">
+            <option value="">-</option>
+            <option value="OnSite">On Site</option>
+            <option value="Remote">Remote</option>
+            <option value="Phone">Phone</option>
+            <option value="Email">Email</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Status:</span>
+        <div class="form-field">
+          <select id="sf-Status" style="height:20px;width:80px">
+            <option value="Open">Open</option>
+            <option value="Close">Close</option>
+            <option value="PD">PD</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row large"><span class="form-label">Problem:</span><div class="form-field"><textarea id="sf-Problem" rows="3"></textarea></div></div>
+      <div class="form-row large"><span class="form-label">Action:</span><div class="form-field"><textarea id="sf-cAction" rows="3"></textarea></div></div>
+      <div class="form-row large"><span class="form-label">Remark:</span><div class="form-field"><textarea id="sf-Remark" rows="2"></textarea></div></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="saveSubRecord('swfix')">💾 Save</button>
+      <button onclick="closeModal('modal-swfix')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ HW RMA DETAIL MODAL ═════════════════════════════════ -->
+<div class="modal-overlay" id="modal-hwrma">
+  <div class="modal-window" style="width:520px">
+    <div class="titlebar">
+      <span class="titlebar-icon">🔧</span>
+      <span class="titlebar-title">HW RMA</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-hwrma')">✕</button></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <span class="form-label">RMA No:</span>
+        <div class="form-field"><input type="text" id="rma-RMANo" maxlength="20" style="width:100px"></div>
+        <span class="form-label" style="min-width:70px">Issue Date:</span>
+        <div class="form-field"><input type="text" id="rma-IssueDate" maxlength="20" placeholder="yyyy/mm/dd" style="width:110px"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Status:</span>
+        <div class="form-field">
+          <select id="rma-Status" style="height:20px;width:80px">
+            <option value="Open">Open</option>
+            <option value="Close">Close</option>
+          </select>
+        </div>
+        <span class="form-label" style="min-width:70px">Device:</span>
+        <div class="form-field"><input type="text" id="rma-DeviceName" maxlength="100"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Handle By:</span>
+        <div class="form-field"><select id="rma-HandleBy" style="height:20px;width:140px"></select></div>
+        <span class="form-label" style="min-width:70px">Repair By:</span>
+        <div class="form-field"><input type="text" id="rma-RepairBy" maxlength="50"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Action:</span>
+        <div class="form-field">
+          <select id="rma-cAction" style="height:20px;width:120px">
+            <option value="">-</option>
+            <option value="Repair">Repair</option>
+            <option value="Replace">Replace</option>
+            <option value="Return">Return</option>
+            <option value="Borrow">Borrow</option>
+          </select>
+        </div>
+        <span class="form-label" style="min-width:70px">Method:</span>
+        <div class="form-field">
+          <select id="rma-DeliveryMethod" style="height:20px;width:100px">
+            <option value="">-</option>
+            <option value="OnSite">On Site</option>
+            <option value="Courier">Courier</option>
+            <option value="Walk-in">Walk-in</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Vendor RMA No:</span>
+        <div class="form-field"><input type="text" id="rma-VendorRMANo" maxlength="50" style="width:120px"></div>
+        <span class="form-label" style="min-width:70px">Borrow From:</span>
+        <div class="form-field"><input type="text" id="rma-BorrowFrom" maxlength="50"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Old S/N:</span>
+        <div class="form-field"><input type="text" id="rma-OldSN" maxlength="50"></div>
+        <span class="form-label" style="min-width:70px">New S/N:</span>
+        <div class="form-field"><input type="text" id="rma-NewSN" maxlength="50"></div>
+      </div>
+      <div class="form-row">
+        <span class="form-label">Ship Date:</span>
+        <div class="form-field"><input type="text" id="rma-ShipDate" maxlength="20" placeholder="yyyy/mm/dd" style="width:110px"></div>
+        <span class="form-label" style="min-width:70px">Return Date:</span>
+        <div class="form-field"><input type="text" id="rma-ReturnDate" maxlength="20" placeholder="yyyy/mm/dd" style="width:110px"></div>
+      </div>
+      <div class="form-row large"><span class="form-label">Problem:</span><div class="form-field"><textarea id="rma-Problem" rows="3"></textarea></div></div>
+      <div class="form-row large"><span class="form-label">Remark:</span><div class="form-field"><textarea id="rma-Remark" rows="2"></textarea></div></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="saveSubRecord('hwrma')">💾 Save</button>
+      <button onclick="printRMA()">🖨 Print RMA</button>
+      <button onclick="closeModal('modal-hwrma')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ NOTES DETAIL MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="modal-notes-window">
+  <div class="modal-window" style="width:760px">
+    <div class="titlebar">
+      <span class="titlebar-icon">📝</span>
+      <span class="titlebar-title">Notes</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-notes-window')">✕</button></div>
+    </div>
+    <div class="modal-body" style="min-height:320px;padding:0;display:flex;flex-direction:column">
+      <div class="tab-toolbar">
+        <button onclick="openSubModal('notes','add')">Add</button>
+        <button onclick="openSubModal('notes','edit')">Edit</button>
+        <button onclick="deleteSubRecord('notes')">Delete</button>
+        <button onclick="loadNotesWindow()">Refresh</button>
+      </div>
+      <div class="grid-wrap sunken" style="margin:4px;flex:1">
+        <table class="datagrid" id="grid-notes">
+          <thead><tr>
+            <th style="width:130px">Updated</th><th>Note</th>
+          </tr></thead>
+          <tbody id="tbody-notes"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeModal('modal-notes-window')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notes">
+  <div class="modal-window" style="width:560px">
+    <div class="titlebar">
+      <span class="titlebar-icon">📝</span>
+      <span class="titlebar-title">Notes</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-notes')">✕</button></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-top:4px"><span class="form-label">Notes:</span>
+        <div class="form-field"><textarea id="nt-Notes" rows="12" style="height:220px"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="saveSubRecord('notes')">💾 Save</button>
+      <button onclick="closeModal('modal-notes')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SETTINGS MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-window" style="width:600px">
+    <div class="titlebar">
+      <span class="titlebar-icon">⚙</span>
+      <span class="titlebar-title">Settings</span>
+      <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-settings')">✕</button></div>
+    </div>
+    <div class="modal-body" style="min-height:300px">
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchSettingsTab('city')">City</div>
+        <div class="tab" onclick="switchSettingsTab('engineer')">Engineer</div>
+        <div class="tab" onclick="switchSettingsTab('industry')">Industry</div>
+        <div class="tab" onclick="switchSettingsTab('swname')">SW Name</div>
+        <div class="tab" onclick="switchSettingsTab('serviceday')">Service Day</div>
+        <div class="tab" onclick="switchSettingsTab('servicehr')">Service HR</div>
+        <div class="tab" onclick="switchSettingsTab('systemparm')">System Parm</div>
+      </div>
+
+      <div id="stab-city" class="tab-content active" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-city" placeholder="New city name" style="flex:1">
+          <button onclick="addLookup('city','City')">Add</button>
+          <button onclick="deleteLookup('city')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-city">
+          <thead><tr><th style="width:60px">ID</th><th>City</th></tr></thead>
+          <tbody id="sb-city"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-engineer" class="tab-content" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-engineer" placeholder="Engineer name" style="flex:1">
+          <button onclick="addLookup('engineer','Engineer')">Add</button>
+          <button onclick="deleteLookup('engineer')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-engineer">
+          <thead><tr><th style="width:60px">ID</th><th>Engineer</th></tr></thead>
+          <tbody id="sb-engineer"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-industry" class="tab-content" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-industry" placeholder="Industry name" style="flex:1">
+          <button onclick="addLookup('industry','Industry')">Add</button>
+          <button onclick="deleteLookup('industry')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-industry">
+          <thead><tr><th style="width:60px">ID</th><th>Industry</th></tr></thead>
+          <tbody id="sb-industry"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-swname" class="tab-content" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-swname" placeholder="Software name" style="flex:1">
+          <button onclick="addLookup('swname','Software_Name')">Add</button>
+          <button onclick="deleteLookup('swname')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-swname">
+          <thead><tr><th style="width:60px">ID</th><th>Software Name</th></tr></thead>
+          <tbody id="sb-swname"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-serviceday" class="tab-content" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-serviceday" placeholder="e.g. Mon-Fri" style="flex:1">
+          <button onclick="addLookup('serviceday','ServiceDay')">Add</button>
+          <button onclick="deleteLookup('serviceday')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-serviceday">
+          <thead><tr><th style="width:60px">ID</th><th>Description</th></tr></thead>
+          <tbody id="sb-serviceday"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-servicehr" class="tab-content" style="display:flex;flex-direction:column">
+        <div style="padding:4px;display:flex;gap:4px;border-bottom:1px solid #808080">
+          <input type="text" id="new-servicehr" placeholder="e.g. 9am-5pm" style="flex:1">
+          <button onclick="addLookup('servicehr','ServiceHR')">Add</button>
+          <button onclick="deleteLookup('servicehr')">Delete</button>
+        </div>
+        <div class="settings-grid-wrap"><table class="datagrid settings-grid" id="sg-servicehr">
+          <thead><tr><th style="width:60px">ID</th><th>Description</th></tr></thead>
+          <tbody id="sb-servicehr"></tbody>
+        </table></div>
+      </div>
+
+      <div id="stab-systemparm" class="tab-content" style="display:flex;flex-direction:column">
+        <div class="settings-grid-wrap" style="max-height:350px">
+          <table class="datagrid" id="sg-systemparm">
+            <thead><tr><th>Field ID</th><th>Value</th><th>Description</th></tr></thead>
+            <tbody id="sb-systemparm"></tbody>
+          </table>
+        </div>
+        <div style="padding:4px;border-top:1px solid #808080;display:flex;gap:4px">
+          <button onclick="saveSystemParm()">💾 Save Changes</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeModal('modal-settings')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
