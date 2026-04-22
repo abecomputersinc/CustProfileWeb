@@ -362,6 +362,9 @@ async function printRMA() {
   const nl = (s) => (s||'').replace(/\n/g,'<br>');
   const e  = (s) => esc(s||'');
 
+  const w = window.open('', '_blank', 'width=780,height=960');
+  if (!w) { alert('Please allow popups for this site to print RMA.'); return; }
+
   try {
     const res = await fetch('/printrma.html');
     if (!res.ok) throw new Error('Could not load print template');
@@ -380,10 +383,10 @@ async function printRMA() {
                .replace(/\{\{Remark\}\}/g, nl(r.Remark))
                .replace(/\{\{IssueDate\}\}/g, e(r.IssueDate));
 
-    const w = window.open('', '_blank', 'width=780,height=960');
     w.document.write(html);
     w.document.close();
   } catch (err) {
+    w.close();
     alert('Error loading RMA print template: ' + err.message);
   }
 }
