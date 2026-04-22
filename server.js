@@ -1,6 +1,5 @@
 const express = require('express');
 const { getPool, sql } = require('./db');
-const config = require('./config.json');
 
 const app = express();
 app.use(express.json());
@@ -315,13 +314,8 @@ app.post('/api/hardware', async (req, res) => {
     const pool = await getPool();
     const d = req.body;
     const seqRes = await pool.request()
-      .input('fid', sql.NVarChar, 'COMPU_SEQ')
-      .query("SELECT FieldValue FROM SystemParm WHERE FieldID=@fid");
-    let nextSeq = seqRes.recordset.length ? parseInt(seqRes.recordset[0].FieldValue) + 1 : 101;
-    await pool.request()
-      .input('fid', sql.NVarChar, 'COMPU_SEQ')
-      .input('val', sql.NVarChar, String(nextSeq))
-      .query("UPDATE SystemParm SET FieldValue=@val WHERE FieldID=@fid");
+      .query("SELECT ISNULL(MAX(CAST(SeqNo AS INT)), 100) AS maxSeq FROM Hardware");
+    let nextSeq = seqRes.recordset[0].maxSeq + 1;
     await pool.request()
       .input('Phone_num', sql.NVarChar, d.Phone_num)
       .input('SeqNo', sql.NVarChar, String(nextSeq))
@@ -664,41 +658,7 @@ nvarchar2Lookup('SWName',   'ID', 'Software_Name');
 nvarchar2Lookup('ServiceDay', 'Seq_num', 'ServiceDay');
 nvarchar2Lookup('ServiceHR',  'Seq_num', 'ServiceHR');
 
-// ─── SYSTEM PARAMETERS ────────────────────────────────────────────────────────
-
-app.get('/api/systemparm', async (req, res) => {
-  try {
-    const pool = await getPool();
-    const { like } = req.query;
-    let query = 'SELECT FieldID,FieldValue,GroupName,Description FROM SystemParm';
-    const request = pool.request();
-    if (like) { query += ' WHERE FieldID LIKE @like'; request.input('like', sql.NVarChar, like); }
-    query += ' ORDER BY FieldID';
-    const result = await request.query(query);
-    res.json(result.recordset);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.put('/api/systemparm/:fieldid', async (req, res) => {
-  try {
-    const pool = await getPool();
-    const { FieldValue, Description } = req.body;
-    const chk = await pool.request()
-      .input('fid', sql.NVarChar, req.params.fieldid)
-      .query('SELECT COUNT(*) AS cnt FROM SystemParm WHERE FieldID=@fid');
-    const req2 = pool.request()
-      .input('fid', sql.NVarChar, req.params.fieldid)
-      .input('val', sql.NVarChar, FieldValue || '')
-      .input('desc', sql.NVarChar, Description || '');
-    if (chk.recordset[0].cnt > 0) {
-      await req2.query('UPDATE SystemParm SET FieldValue=@val,Description=@desc WHERE FieldID=@fid');
-    } else {
-      await req2.query("INSERT INTO SystemParm (FieldID,FieldValue,Description) VALUES (@fid,@val,@desc)");
-    }
-    res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
 
 // ─── START ────────────────────────────────────────────────────────────────────
-const PORT = config.port || 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CustProfile Web running at http://localhost:${PORT}`));

@@ -362,165 +362,30 @@ async function printRMA() {
   const nl = (s) => (s||'').replace(/\n/g,'<br>');
   const e  = (s) => esc(s||'');
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>RMA ${r.RMANo}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  try {
+    const res = await fetch('/printrma.html');
+    if (!res.ok) throw new Error('Could not load print template');
+    let html = await res.text();
 
-  html, body {
-    width: 215.9mm; /* letter width */
-    font-family: Arial, 'Microsoft YaHei', sans-serif;
-    font-size: 13px;
-    color: #000;
+    html = html.replace(/\{\{RMANo\}\}/g, e(r.RMANo))
+               .replace(/\{\{Cust_Name\}\}/g, e(cust.Cust_Name))
+               .replace(/\{\{Street\}\}/g, e(cust.Street))
+               .replace(/\{\{addrLine2\}\}/g, e(addrLine2))
+               .replace(/\{\{Postal_Code\}\}/g, e(cust.Postal_Code))
+               .replace(/\{\{DeviceName\}\}/g, e(r.DeviceName))
+               .replace(/\{\{Problem\}\}/g, nl(r.Problem))
+               .replace(/\{\{cAction\}\}/g, e(r.cAction))
+               .replace(/\{\{OldSN\}\}/g, e(r.OldSN))
+               .replace(/\{\{NewSN\}\}/g, e(r.NewSN))
+               .replace(/\{\{Remark\}\}/g, nl(r.Remark))
+               .replace(/\{\{IssueDate\}\}/g, e(r.IssueDate));
+
+    const w = window.open('', '_blank', 'width=780,height=960');
+    w.document.write(html);
+    w.document.close();
+  } catch (err) {
+    alert('Error loading RMA print template: ' + err.message);
   }
-
-  body {
-    padding: 16mm 18mm;
-    display: flex;
-    flex-direction: column;
-    min-height: 279.4mm; /* letter height */
-  }
-
-  /* ── header ── */
-  .co-name    { font-size: 17px; font-weight: bold; }
-  .co-cn      { font-size: 14px; font-weight: bold; margin-top: 1px; }
-  .co-addr    { font-size: 11.5px; line-height: 1.7; margin-top: 4px; }
-  .co-divider { border: none; border-top: 2px solid #000; margin: 10px 0 8px; }
-
-  /* ── title ── */
-  .doc-title  { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 2px; margin-bottom: 18px; }
-
-  /* ── customer block ── */
-  .cust-lbl   { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
-  .cust-val   { font-size: 13px; line-height: 2; padding-left: 8px; margin-bottom: 16px; }
-
-  /* ── field rows ── */
-  .field-section { flex: 1; }
-  .field-row  {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid #ccc;
-    min-height: 44px;
-  }
-  .field-row:first-child { border-top: 1px solid #ccc; }
-  .field-lbl  {
-    font-weight: bold;
-    white-space: nowrap;
-    width: 185px;
-    flex-shrink: 0;
-    padding: 10px 12px 10px 0;
-    display: flex;
-    align-items: center;
-    border-right: 1px solid #ccc;
-  }
-  .field-val  {
-    flex: 1;
-    padding: 10px 12px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .field-val.tall { min-height: 66px; align-items: flex-start; padding-top: 10px; }
-
-  /* ── service / charge ── */
-  .agree-row  {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: bold;
-    font-size: 13px;
-    padding: 14px 0 8px;
-  }
-  .choice     { font-weight: normal; border: 1px solid #000; padding: 2px 16px; }
-  .charge-row { font-weight: bold; font-size: 13px; padding-bottom: 14px; }
-
-  /* ── RMA meta ── */
-  .rma-meta   {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    font-weight: bold;
-    border-top: 2px solid #000;
-    border-bottom: 2px solid #000;
-    padding: 10px 0;
-    margin: 6px 0 20px;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── signatures ── */
-  .sig-row    { display: flex; justify-content: space-between; margin-top: auto; padding-top: 20px; }
-  .sig-block  { width: 42%; }
-  .sig-line   { border-top: 1px solid #000; margin-top: 50px; font-size: 11.5px; text-align: center; padding-top: 4px; }
-
-  /* ── print ── */
-  .no-print   { margin-bottom: 14px; text-align: right; }
-  @media print {
-    .no-print { display: none; }
-    @page { size: letter; margin: 0; }
-  }
-</style>
-</head><body>
-
-<div class="no-print">
-  <button onclick="window.print()" style="padding:5px 20px;font-size:13px;cursor:pointer">🖨 Print</button>
-</div>
-
-<!-- Company Header -->
-<div class="co-name">TechRider Information Solutions Inc.</div>
-<div class="co-cn">鼎樵电脑</div>
-<div class="co-addr">
-  3575 14th Ave Unit 15&nbsp;&nbsp;Markham, L3R 0H6<br>
-  Phone: 9054809522&nbsp;&nbsp;&nbsp;FAX: 9054776518<br>
-  Email: customercare@torontosquare.com
-</div>
-<hr class="co-divider">
-
-<div class="doc-title">Service Parts Consumption</div>
-
-<!-- Customer -->
-<div class="cust-lbl">Customer Name:</div>
-<div class="cust-val">
-  ${e(cust.Cust_Name)}<br>
-  ${e(cust.Street)}<br>
-  ${e(addrLine2)}<br>
-  ${e(cust.Postal_Code)}
-</div>
-
-<!-- Device fields -->
-<div class="field-section">
-  <div class="field-row"><span class="field-lbl">Device Name:</span><span class="field-val">${e(r.DeviceName)}</span></div>
-  <div class="field-row"><span class="field-lbl">Problem:</span><span class="field-val tall">${nl(r.Problem)}</span></div>
-  <div class="field-row"><span class="field-lbl">Action:</span><span class="field-val">${e(r.cAction)}</span></div>
-  <div class="field-row"><span class="field-lbl">Old Serial Number:</span><span class="field-val">${e(r.OldSN)}</span></div>
-  <div class="field-row"><span class="field-lbl">New Serial Number:</span><span class="field-val">${e(r.NewSN)}</span></div>
-  <div class="field-row"><span class="field-lbl">Remark:</span><span class="field-val tall">${nl(r.Remark)}</span></div>
-</div>
-
-<!-- Service Agreement -->
-<div class="agree-row">
-  Service Agreement:&nbsp; <span class="choice">YES</span> / <span class="choice">NO</span>
-</div>
-<div class="charge-row">Charge to Customer $</div>
-
-<!-- RMA meta bar -->
-<div class="rma-meta">
-  <span>ISSUE DATE:&nbsp; ${e(r.IssueDate)}</span>
-  <span>RMA:&nbsp; ${e(r.RMANo)}</span>
-</div>
-
-<!-- Signatures -->
-<div class="sig-row">
-  <div class="sig-block"><div class="sig-line">Customer Signature</div></div>
-  <div class="sig-block"><div class="sig-line">Technician Signature</div></div>
-</div>
-
-</body></html>`;
-
-  const w = window.open('', '_blank', 'width=780,height=960');
-  w.document.write(html);
-  w.document.close();
 }
 
 // ─── CALLLOG ──────────────────────────────────────────────────────────────────
@@ -877,7 +742,7 @@ async function openSettings() {
 function switchSettingsTab(tab) {
   state.settingsTab = tab;
   document.querySelectorAll('#modal-settings .tab-bar .tab').forEach((el,i) => {
-    const tabs = ['city','engineer','industry','swname','serviceday','servicehr','systemparm'];
+    const tabs = ['city','engineer','industry','swname','serviceday','servicehr'];
     el.classList.toggle('active', tabs[i] === tab);
   });
   document.querySelectorAll('#modal-settings .tab-content').forEach(el => {
@@ -886,8 +751,7 @@ function switchSettingsTab(tab) {
   const tc = document.getElementById('stab-' + tab);
   if (tc) { tc.classList.add('active'); tc.style.display = 'flex'; }
 
-  if (tab === 'systemparm') loadSysParm();
-  else renderSettingsGrid(tab);
+  renderSettingsGrid(tab);
 }
 
 function renderAllSettings() {
@@ -952,32 +816,3 @@ async function deleteLookup(tab) {
   } catch(e) { alert('Error: ' + e.message); }
 }
 
-async function loadSysParm() {
-  try {
-    const rows = await GET('/api/systemparm');
-    const tbody = document.getElementById('sb-systemparm');
-    tbody.innerHTML = '';
-    rows.forEach(r => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.FieldID)}</td>
-        <td><input type="text" value="${esc(r.FieldValue||'')}" data-fid="${esc(r.FieldID)}" data-col="v" style="width:100%;border:none;background:transparent;font-size:11px"></td>
-        <td><input type="text" value="${esc(r.Description||'')}" data-fid="${esc(r.FieldID)}" data-col="d" style="width:100%;border:none;background:transparent;font-size:11px"></td>`;
-      tbody.appendChild(tr);
-    });
-  } catch(e) { alert('Error: ' + e.message); }
-}
-
-async function saveSystemParm() {
-  const rows = document.querySelectorAll('#sb-systemparm tr');
-  for (const tr of rows) {
-    const valInput  = tr.querySelector('[data-col="v"]');
-    const descInput = tr.querySelector('[data-col="d"]');
-    if (!valInput) continue;
-    const fid = valInput.dataset.fid;
-    try {
-      await PUT(`/api/systemparm/${fid}`, { FieldValue: valInput.value, Description: descInput?.value || '' });
-    } catch(e) { alert('Error saving ' + fid + ': ' + e.message); return; }
-  }
-  setStatus('System parameters saved.');
-  alert('System parameters saved.');
-}

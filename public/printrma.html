@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>RMA {{RMANo}}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --text-main: #000000;
+      --border: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 215.9mm;
+      /* Letter size width */
+      height: 279.4mm;
+      /* Letter size height */
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 12px;
+      /* Slightly smaller for single page fit */
+      color: var(--text-main);
+      background: #fff;
+    }
+
+    body {
+      padding: 30mm 16mm 12mm 16mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Print Utilities ── */
+    .no-print {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+
+    .print-btn {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    @media print {
+      .no-print {
+        display: none;
+      }
+
+      @page {
+        size: letter;
+        margin: 0;
+      }
+
+      body {
+        padding: 30mm 16mm 12mm 16mm;
+      }
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .company-info h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .company-info h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .company-info p {
+      line-height: 1.4;
+      font-size: 11px;
+    }
+
+    .doc-meta {
+      text-align: right;
+    }
+
+    .doc-meta h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 4px 12px;
+      text-align: right;
+    }
+
+    .meta-label {
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .meta-value {
+      font-weight: 600;
+    }
+
+    /* ── Titles ── */
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .main-title {
+      text-align: left;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-decoration: underline;
+    }
+
+    /* ── Customer Section ── */
+    .customer-section {
+      margin-bottom: 15px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+    }
+
+    .customer-details {
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* ── Device Details Grid ── */
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      margin-bottom: 15px;
+    }
+
+    .grid-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .grid-label {
+      padding: 8px 12px;
+      font-weight: 700;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+    }
+
+    .grid-value {
+      padding: 8px 12px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .tall .grid-value {
+      min-height: 100px;
+      align-items: flex-start;
+    }
+
+    /* ── Service & Charges ── */
+    .summary-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 2px solid var(--border);
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .agreement {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 400;
+    }
+
+    .box-icon {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .charge {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .charge-amount {
+      width: 120px;
+      display: inline-block;
+    }
+
+    /* ── Signatures ── */
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 10px;
+    }
+
+    .sig-block {
+      width: 40%;
+    }
+
+    .sig-line {
+      border-bottom: 1px solid var(--border);
+      height: 40px;
+      margin-bottom: 8px;
+    }
+
+    .sig-label {
+      font-weight: 700;
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="no-print">
+    <button class="print-btn" onclick="window.print()">🖨 Print RMA</button>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="company-info">
+      <h1>TechRider Information Solutions Inc.</h1>
+      <h2>鼎樵电脑</h2>
+      <p>
+        3575 14th Ave Unit 15<br>
+        Markham, ON L3R 0H6<br>
+        Phone: (905) 480-9522 &nbsp;|&nbsp; Fax: (905) 477-6518<br>
+        Email: customercare@torontosquare.com
+      </p>
+    </div>
+
+    <div class="doc-meta">
+      <h1>RMA REPORT</h1>
+      <div class="meta-grid">
+        <div class="meta-label">RMA NUMBER:</div>
+        <div class="meta-value">{{RMANo}}</div>
+        <div class="meta-label">ISSUE DATE:</div>
+        <div class="meta-value">{{IssueDate}}</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-title">Service Parts Consumption</div>
+
+  <!-- Customer -->
+  <div class="customer-section">
+    <div class="section-title">Customer Details</div>
+    <div class="customer-details">
+      {{Cust_Name}}<br>
+      {{Street}}<br>
+      {{addrLine2}}<br>
+      {{Postal_Code}}
+    </div>
+  </div>
+
+  <!-- Device details -->
+  <div class="details-grid">
+    <div class="grid-row">
+      <div class="grid-label">Device Name</div>
+      <div class="grid-value">{{DeviceName}}</div>
+    </div>
+    <div class="grid-row tall">
+      <div class="grid-label">Problem</div>
+      <div class="grid-value">{{Problem}}</div>
+    </div>
+    <div class="grid-row tall">
+      <div class="grid-label">Action Taken</div>
+      <div class="grid-value">{{cAction}}</div>
+    </div>
+    <div class="grid-row">
+      <div class="grid-label">Old Serial No.</div>
+      <div class="grid-value">{{OldSN}}</div>
+    </div>
+    <div class="grid-row">
+      <div class="grid-label">New Serial No.</div>
+      <div class="grid-value">{{NewSN}}</div>
+    </div>
+    <div class="grid-row tall">
+      <div class="grid-label">Remarks</div>
+      <div class="grid-value">{{Remark}}</div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-section">
+    <div class="agreement">
+      Service Agreement:
+      <div class="checkbox-group">
+        <div class="checkbox">
+          <div class="box-icon"></div> YES
+        </div>
+        <div class="checkbox">
+          <div class="box-icon"></div> NO
+        </div>
+      </div>
+    </div>
+    <div class="charge">
+      Charge to Customer: $ <span class="charge-amount"></span>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signatures">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Customer Signature</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Technician Signature</div>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -680,7 +680,6 @@
         <div class="tab" onclick="switchSettingsTab('swname')">SW Name</div>
         <div class="tab" onclick="switchSettingsTab('serviceday')">Service Day</div>
         <div class="tab" onclick="switchSettingsTab('servicehr')">Service HR</div>
-        <div class="tab" onclick="switchSettingsTab('systemparm')">System Parm</div>
       </div>
 
       <div id="stab-city" class="tab-content active" style="display:flex;flex-direction:column">
@@ -755,19 +754,8 @@
         </table></div>
       </div>
 
-      <div id="stab-systemparm" class="tab-content" style="display:flex;flex-direction:column">
-        <div class="settings-grid-wrap" style="max-height:350px">
-          <table class="datagrid" id="sg-systemparm">
-            <thead><tr><th>Field ID</th><th>Value</th><th>Description</th></tr></thead>
-            <tbody id="sb-systemparm"></tbody>
-          </table>
-        </div>
-        <div style="padding:4px;border-top:1px solid #808080;display:flex;gap:4px">
-          <button onclick="saveSystemParm()">💾 Save Changes</button>
-        </div>
-      </div>
 
-    </div>
+</div>
     <div class="modal-btns">
       <button onclick="closeModal('modal-settings')">Close</button>
     </div>
