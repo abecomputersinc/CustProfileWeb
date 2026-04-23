@@ -168,7 +168,7 @@ app.put('/api/customers/:phone', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    await pool.request()
+    const request = pool.request()
       .input('Phone_num', sql.VarChar, req.params.phone)
       .input('Ext1', sql.VarChar, d.Ext1 || '')
       .input('Cust_Name', sql.NVarChar, d.Cust_Name || '')
@@ -203,18 +203,24 @@ app.put('/api/customers/:phone', async (req, res) => {
       .input('BStatus', sql.VarChar, d.BStatus || '')
       .input('InstallationSummary', sql.NVarChar, d.InstallationSummary || '')
       .input('AccessIP', sql.VarChar, d.AccessIP || '')
-      .input('RustDesk', sql.VarChar, d.RustDesk || '')
-      .query(`UPDATE Customer SET Ext1=@Ext1,Cust_Name=@Cust_Name,Street=@Street,City=@City,
-        Province=@Province,Contract_Service=@Contract_Service,Contact_Person=@Contact_Person,
-        Postal_Code=@Postal_Code,Fax=@Fax,Industry=@Industry,Installation_Date=@Installation_Date,
-        Last_Modified_Date=@Last_Modified_Date,Phone2=@Phone2,EMail=@EMail,
-        Warranty_Expiry_DateHW=@Warranty_Expiry_DateHW,Warranty_Expiry_DateSF=@Warranty_Expiry_DateSF,
-        Remote_Access=@Remote_Access,ServiceDay=@ServiceDay,ServiceHR=@ServiceHR,
-        CreditCardType=@CreditCardType,CreditCardNum=@CreditCardNum,CreditCardHolder=@CreditCardHolder,
-        CreditCardExpDate=@CreditCardExpDate,URLAddress=@URLAddress,RecDate=@RecDate,
-        NoURL=@NoURL,AnyDesk=@AnyDesk,ADate=@ADate,AStatus=@AStatus,BDate=@BDate,BStatus=@BStatus,
-        InstallationSummary=@InstallationSummary,AccessIP=@AccessIP,RustDesk=@RustDesk
-        WHERE Phone_num=@Phone_num`);
+      .input('RustDesk', sql.VarChar, d.RustDesk || '');
+    let query = `UPDATE Customer SET Ext1=@Ext1,Cust_Name=@Cust_Name,Street=@Street,City=@City,
+      Province=@Province,Contract_Service=@Contract_Service,Contact_Person=@Contact_Person,
+      Postal_Code=@Postal_Code,Fax=@Fax,Industry=@Industry,Installation_Date=@Installation_Date,
+      Last_Modified_Date=@Last_Modified_Date,Phone2=@Phone2,EMail=@EMail,
+      Warranty_Expiry_DateHW=@Warranty_Expiry_DateHW,Warranty_Expiry_DateSF=@Warranty_Expiry_DateSF,
+      Remote_Access=@Remote_Access,ServiceDay=@ServiceDay,ServiceHR=@ServiceHR,
+      CreditCardType=@CreditCardType,CreditCardNum=@CreditCardNum,CreditCardHolder=@CreditCardHolder,
+      CreditCardExpDate=@CreditCardExpDate,URLAddress=@URLAddress,RecDate=@RecDate,
+      NoURL=@NoURL,AnyDesk=@AnyDesk,ADate=@ADate,AStatus=@AStatus,BDate=@BDate,BStatus=@BStatus,
+      InstallationSummary=@InstallationSummary,AccessIP=@AccessIP,RustDesk=@RustDesk
+      WHERE Phone_num=@Phone_num`;
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND Last_Modified_Date=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -289,7 +295,7 @@ app.put('/api/calllog/:phone/:seqno', async (req, res) => {
     const pool = await getPool();
     const d = req.body;
     const callDate = parseDate(d.CallDate) || new Date();
-    await pool.request()
+    const request = pool.request()
       .input('Phone_num', sql.NVarChar, req.params.phone)
       .input('SeqNo', sql.NVarChar, req.params.seqno)
       .input('CallDate', sql.DateTime, callDate)
@@ -301,9 +307,17 @@ app.put('/api/calllog/:phone/:seqno', async (req, res) => {
       .input('Response', sql.NVarChar, d.Response || '')
       .input('Status', sql.NVarChar, d.Status || '')
       .input('Remark', sql.NVarChar, d.Remark || '')
-      .query(`UPDATE CallLog SET CallDate=@CallDate,CallTime=@CallTime,ServHour=@ServHour,
-              Subject=@Subject,Action=@Action,Via=@Via,Response=@Response,Status=@Status,Remark=@Remark
-              WHERE Phone_num=@Phone_num AND SeqNo=@SeqNo`);
+      .input('Last_Modified_Date', sql.DateTime, new Date());
+    let query = `UPDATE CallLog SET CallDate=@CallDate,CallTime=@CallTime,ServHour=@ServHour,
+                Subject=@Subject,Action=@Action,Via=@Via,Response=@Response,Status=@Status,
+                Remark=@Remark,Last_Modified_Date=@Last_Modified_Date
+                WHERE Phone_num=@Phone_num AND SeqNo=@SeqNo`;
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND Last_Modified_Date=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -376,7 +390,7 @@ app.put('/api/hardware/:seqno', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    await pool.request()
+    const request = pool.request()
       .input('SeqNo', sql.NVarChar, req.params.seqno)
       .input('Phone_num', sql.NVarChar, d.Phone_num || '')
       .input('Device_Name', sql.NVarChar, d.Device_Name || '')
@@ -393,10 +407,18 @@ app.put('/api/hardware/:seqno', async (req, res) => {
       .input('Others', sql.NVarChar, d.Others || '')
       .input('CustomerProvide', sql.NVarChar, d.CustomerProvide || '')
       .input('BorrowTo', sql.NVarChar, d.BorrowTo || '')
-      .query(`UPDATE Hardware SET Phone_num=@Phone_num,Device_Name=@Device_Name,MotherBoard=@MotherBoard,
-              CPU=@CPU,Memory=@Memory,HDD=@HDD,Monitor=@Monitor,KB=@KB,GraphicCard=@GraphicCard,
-              Printer=@Printer,Scanner=@Scanner,CashDrawer=@CashDrawer,Others=@Others,
-              CustomerProvide=@CustomerProvide,BorrowTo=@BorrowTo WHERE SeqNo=@SeqNo`);
+      .input('Last_Modified_Date', sql.DateTime, new Date());
+    let query = `UPDATE Hardware SET Phone_num=@Phone_num,Device_Name=@Device_Name,MotherBoard=@MotherBoard,
+                CPU=@CPU,Memory=@Memory,HDD=@HDD,Monitor=@Monitor,KB=@KB,GraphicCard=@GraphicCard,
+                Printer=@Printer,Scanner=@Scanner,CashDrawer=@CashDrawer,Others=@Others,
+                CustomerProvide=@CustomerProvide,BorrowTo=@BorrowTo,Last_Modified_Date=@Last_Modified_Date
+                WHERE SeqNo=@SeqNo`;
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND Last_Modified_Date=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -481,7 +503,7 @@ app.put('/api/hwrma/:phone/:rmano', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    await pool.request()
+    const request = pool.request()
       .input('Phone_num', sql.NVarChar, req.params.phone)
       .input('RMANo', sql.NVarChar, req.params.rmano)
       .input('IssueDate', sql.DateTime, parseDate(d.IssueDate) || new Date())
@@ -499,11 +521,18 @@ app.put('/api/hwrma/:phone/:rmano', async (req, res) => {
       .input('NewSN', sql.NVarChar, d.NewSN || '')
       .input('DeliveryMethod', sql.NVarChar, d.DeliveryMethod || '')
       .input('Remark', sql.NVarChar, d.Remark || '')
-      .query(`UPDATE HWRMA SET IssueDate=@IssueDate,Status=@Status,DeviceName=@DeviceName,Problem=@Problem,
-              cAction=@cAction,HandleBy=@HandleBy,RepairBy=@RepairBy,VendorRMANo=@VendorRMANo,
-              ShipDate=@ShipDate,ReturnDate=@ReturnDate,BorrowFrom=@BorrowFrom,OldSN=@OldSN,
-              NewSN=@NewSN,DeliveryMethod=@DeliveryMethod,Remark=@Remark
-              WHERE Phone_num=@Phone_num AND RMANo=@RMANo`);
+      .input('Last_Modified_Date', sql.DateTime, new Date());
+    let query = `UPDATE HWRMA SET IssueDate=@IssueDate,Status=@Status,DeviceName=@DeviceName,Problem=@Problem,
+                cAction=@cAction,HandleBy=@HandleBy,RepairBy=@RepairBy,VendorRMANo=@VendorRMANo,
+                ShipDate=@ShipDate,ReturnDate=@ReturnDate,BorrowFrom=@BorrowFrom,OldSN=@OldSN,
+                NewSN=@NewSN,DeliveryMethod=@DeliveryMethod,Remark=@Remark,Last_Modified_Date=@Last_Modified_Date
+                WHERE Phone_num=@Phone_num AND RMANo=@RMANo`;
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND Last_Modified_Date=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -569,7 +598,7 @@ app.put('/api/swfix/:phone/:casenum', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    await pool.request()
+    const request = pool.request()
       .input('CaseNum', sql.NVarChar, req.params.casenum)
       .input('IssueDate', sql.DateTime, parseDate(d.IssueDate) || new Date())
       .input('Status', sql.NVarChar, d.Status || '')
@@ -580,9 +609,17 @@ app.put('/api/swfix/:phone/:casenum', async (req, res) => {
       .input('HandleBy', sql.NVarChar, d.HandleBy || '')
       .input('DeliveryMethod', sql.NVarChar, d.DeliveryMethod || '')
       .input('Remark', sql.NVarChar, d.Remark || '')
-      .query(`UPDATE SWFix SET IssueDate=@IssueDate,Status=@Status,SoftwareName=@SoftwareName,
-              Version=@Version,Problem=@Problem,cAction=@cAction,HandleBy=@HandleBy,
-              DeliveryMethod=@DeliveryMethod,Remark=@Remark WHERE CaseNum=@CaseNum`);
+      .input('Last_Modified_Date', sql.DateTime, new Date());
+    let query = `UPDATE SWFix SET IssueDate=@IssueDate,Status=@Status,SoftwareName=@SoftwareName,
+                Version=@Version,Problem=@Problem,cAction=@cAction,HandleBy=@HandleBy,
+                DeliveryMethod=@DeliveryMethod,Remark=@Remark,Last_Modified_Date=@Last_Modified_Date
+                WHERE CaseNum=@CaseNum`;
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND Last_Modified_Date=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -627,11 +664,18 @@ app.post('/api/notes', async (req, res) => {
 app.put('/api/notes/:id', async (req, res) => {
   try {
     const pool = await getPool();
-    await pool.request()
+    const d = req.body;
+    const request = pool.request()
       .input('ID', sql.Int, parseInt(req.params.id))
-      .input('Notes', sql.NVarChar, req.body.Notes || '')
-      .input('UpdTime', sql.DateTime, new Date())
-      .query('UPDATE Notes SET Notes=@Notes, UpdTime=@UpdTime WHERE ID=@ID');
+      .input('Notes', sql.NVarChar, d.Notes || '')
+      .input('UpdTime', sql.DateTime, new Date());
+    let query = 'UPDATE Notes SET Notes=@Notes, UpdTime=@UpdTime WHERE ID=@ID';
+    if (d._ts) {
+      request.input('clientTs', sql.DateTime, new Date(d._ts));
+      query += ' AND UpdTime=@clientTs';
+    }
+    const result = await request.query(query);
+    if (d._ts && result.rowsAffected[0] === 0) return res.status(409).json({ error: 'conflict' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
