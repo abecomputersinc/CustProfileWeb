@@ -643,13 +643,15 @@ function nvarchar2Lookup(table, idField, nameField, sqlIdType) {
   app.post(`/api/lookup/${table.toLowerCase()}`, async (req, res) => {
     try {
       const pool = await getPool();
-      const maxRes = await pool.request()
-        .query(`SELECT ISNULL(MAX(CAST(${idField} AS INT)),0)+1 AS Next FROM ${table}`);
-      const nextId = String(maxRes.recordset[0].Next).padStart(2, '0');
-      await pool.request()
-        .input('id',  sql.NVarChar, nextId)
-        .input('val', sql.NVarChar, req.body[nameField] || '')
-        .query(`INSERT INTO ${table} (${idField}, ${nameField}) VALUES (@id, @val)`);
+      await withSerializable(pool, async (transaction) => {
+        const maxRes = await transaction.request()
+          .query(`SELECT ISNULL(MAX(CAST(${idField} AS INT)),0)+1 AS Next FROM ${table}`);
+        const nextId = String(maxRes.recordset[0].Next).padStart(2, '0');
+        await transaction.request()
+          .input('id',  sql.NVarChar, nextId)
+          .input('val', sql.NVarChar, req.body[nameField] || '')
+          .query(`INSERT INTO ${table} (${idField}, ${nameField}) VALUES (@id, @val)`);
+      });
       res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
