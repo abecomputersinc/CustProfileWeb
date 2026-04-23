@@ -640,8 +640,15 @@ app.delete('/api/swfix/:phone/:casenum', async (req, res) => {
 app.get('/api/notes', async (req, res) => {
   try {
     const pool = await getPool();
-    const result = await pool.request()
-      .query('SELECT ID, CAST(Notes AS NVARCHAR(MAX)) AS Notes, UpdTime FROM Notes ORDER BY UpdTime DESC');
+    const q = String(req.query.q || '').trim();
+    const request = pool.request();
+    let query = 'SELECT ID, CAST(Notes AS NVARCHAR(MAX)) AS Notes, UpdTime FROM Notes';
+    if (q) {
+      request.input('q', sql.NVarChar, q);
+      query += ' WHERE CHARINDEX(@q, CAST(Notes AS NVARCHAR(MAX))) > 0';
+    }
+    query += ' ORDER BY UpdTime DESC';
+    const result = await request.query(query);
     result.recordset.forEach(r => {
       r._ts = r.UpdTime ? new Date(r.UpdTime).toISOString() : null;
       fmtDateRow(r, ['UpdTime']);

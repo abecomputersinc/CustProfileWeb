@@ -629,6 +629,12 @@
         <button onclick="openSubModal('notes','edit')">Edit</button>
         <button onclick="deleteSubRecord('notes')">Delete</button>
         <button onclick="loadNotesWindow()">Refresh</button>
+        <span style="flex:1"></span>
+        <label style="align-self:center;white-space:nowrap">Search:</label>
+        <input type="text" id="notes-search" style="width:220px" placeholder="Note text"
+               onkeydown="if(event.key==='Enter')loadNotesWindow()">
+        <button onclick="loadNotesWindow()">Search</button>
+        <button onclick="clearNotesSearch()">Clear</button>
       </div>
       <div class="grid-wrap sunken" style="margin:4px;flex:1">
         <table class="datagrid" id="grid-notes">

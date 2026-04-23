@@ -498,10 +498,19 @@ function renderNotes(rows) {
 async function loadNotesWindow() {
   try {
     state.subSelected = null;
-    renderNotes(await GET('/api/notes'));
+    const q = document.getElementById('notes-search')?.value.trim() || '';
+    const rows = await GET('/api/notes' + (q ? `?q=${enc(q)}` : ''));
+    renderNotes(rows);
+    setStatus(q ? `${rows.length} note(s) found.` : `${rows.length} note(s) loaded.`);
   } catch(e) {
     setStatus('Error loading notes: ' + e.message, true);
   }
+}
+
+function clearNotesSearch() {
+  const input = document.getElementById('notes-search');
+  if (input) input.value = '';
+  loadNotesWindow();
 }
 
 async function openNotesWindow() {
