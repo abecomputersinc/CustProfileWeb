@@ -10,6 +10,7 @@ const state = {
   custEditLoaded: false,
   subEditMode: null,
   subSelected: null,  // selected row data for each tab
+  notesSearchTimer: null,
   lookup: { city:[], engineer:[], industry:[], swname:[], serviceday:[], servicehr:[] },
   settingsTab: 'city',
   settingsSelected: {}   // { city: null, engineer: null, ... }
@@ -507,7 +508,13 @@ async function loadNotesWindow() {
   }
 }
 
+function scheduleNotesSearch() {
+  clearTimeout(state.notesSearchTimer);
+  state.notesSearchTimer = setTimeout(() => loadNotesWindow(), 250);
+}
+
 function clearNotesSearch() {
+  clearTimeout(state.notesSearchTimer);
   const input = document.getElementById('notes-search');
   if (input) input.value = '';
   loadNotesWindow();
@@ -516,6 +523,7 @@ function clearNotesSearch() {
 async function openNotesWindow() {
   await loadNotesWindow();
   showModal('modal-notes-window');
+  document.getElementById('notes-search')?.focus();
 }
 
 // ─── SUB ROW SELECTION ────────────────────────────────────────────────────────
@@ -623,7 +631,58 @@ function openHWRMAModal(mode) {
 function openNotesModal(mode) {
   const r = mode === 'edit' ? state.subSelected : {};
   setVal('nt-Notes', r.Notes || '');
+  setVal('note-text-search', '');
+  const status = document.getElementById('note-text-search-status');
+  if (status) status.textContent = '';
   showModal('modal-notes');
+  setTimeout(() => document.getElementById('nt-Notes')?.focus(), 0);
+}
+
+function findOpenNoteText() {
+  const textarea = document.getElementById('nt-Notes');
+  const input = document.getElementById('note-text-search');
+  const status = document.getElementById('note-text-search-status');
+  if (!textarea || !input) return;
+
+  const needle = input.value;
+  if (!needle) {
+    if (status) status.textContent = '';
+    input.focus();
+    return;
+  }
+
+  const haystack = textarea.value;
+  const searchText = haystack.toLowerCase();
+  const searchNeedle = needle.toLowerCase();
+  const matches = [];
+  let pos = 0;
+  while ((pos = searchText.indexOf(searchNeedle, pos)) !== -1) {
+    matches.push(pos);
+    pos += searchNeedle.length;
+  }
+
+  if (!matches.length) {
+    if (status) status.textContent = 'No match';
+    input.focus();
+    input.select();
+    return;
+  }
+
+  const startFrom = textarea.selectionEnd || 0;
+  let matchIndex = matches.findIndex(match => match >= startFrom);
+  if (matchIndex === -1) matchIndex = 0;
+
+  const start = matches[matchIndex];
+  textarea.focus();
+  textarea.setSelectionRange(start, start + needle.length);
+  if (status) status.textContent = `${matchIndex + 1} of ${matches.length}`;
+}
+
+function clearOpenNoteSearch() {
+  setVal('note-text-search', '');
+  const status = document.getElementById('note-text-search-status');
+  if (status) status.textContent = '';
+  document.getElementById('nt-Notes')?.focus();
 }
 
 // ─── SUB RECORD SAVE ─────────────────────────────────────────────────────────

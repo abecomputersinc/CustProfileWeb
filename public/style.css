@@ -342,6 +342,26 @@ input[type="checkbox"] { width: auto; height: auto; }
   overflow-y: auto;
   flex: 1;
 }
+.full-page-modal {
+  width: calc(100vw - 12px);
+  height: calc(100vh - 12px);
+  max-height: calc(100vh - 12px);
+}
+.notes-page-body,
+.notes-editor-body {
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.notes-editor-textarea {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  width: calc(100% - 8px);
+  margin: 4px;
+  resize: none;
+}
 .modal-btns {
   padding: 4px 8px;
   display: flex;

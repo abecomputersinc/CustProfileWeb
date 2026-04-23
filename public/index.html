@@ -617,13 +617,13 @@
 
 <!-- ═══════════════════ NOTES DETAIL MODAL ══════════════════════════════════ -->
 <div class="modal-overlay" id="modal-notes-window">
-  <div class="modal-window" style="width:760px">
+  <div class="modal-window full-page-modal">
     <div class="titlebar">
       <span class="titlebar-icon">📝</span>
       <span class="titlebar-title">Notes</span>
       <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-notes-window')">✕</button></div>
     </div>
-    <div class="modal-body" style="min-height:320px;padding:0;display:flex;flex-direction:column">
+    <div class="modal-body notes-page-body">
       <div class="tab-toolbar">
         <button onclick="openSubModal('notes','add')">Add</button>
         <button onclick="openSubModal('notes','edit')">Edit</button>
@@ -632,6 +632,7 @@
         <span style="flex:1"></span>
         <label style="align-self:center;white-space:nowrap">Search:</label>
         <input type="text" id="notes-search" style="width:220px" placeholder="Note text"
+               oninput="scheduleNotesSearch()"
                onkeydown="if(event.key==='Enter')loadNotesWindow()">
         <button onclick="loadNotesWindow()">Search</button>
         <button onclick="clearNotesSearch()">Clear</button>
@@ -652,16 +653,22 @@
 </div>
 
 <div class="modal-overlay" id="modal-notes">
-  <div class="modal-window" style="width:560px">
+  <div class="modal-window full-page-modal">
     <div class="titlebar">
       <span class="titlebar-icon">📝</span>
       <span class="titlebar-title">Notes</span>
       <div class="titlebar-btns"><button class="titlebar-btn" onclick="closeModal('modal-notes')">✕</button></div>
     </div>
-    <div class="modal-body">
-      <div class="form-row" style="margin-top:4px"><span class="form-label">Notes:</span>
-        <div class="form-field"><textarea id="nt-Notes" rows="12" style="height:220px"></textarea></div>
+    <div class="modal-body notes-editor-body">
+      <div class="tab-toolbar">
+        <label style="align-self:center;white-space:nowrap">Find:</label>
+        <input type="text" id="note-text-search" style="width:260px" placeholder="Text in this note"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();findOpenNoteText()}">
+        <button onclick="findOpenNoteText()">Find</button>
+        <button onclick="clearOpenNoteSearch()">Clear</button>
+        <span id="note-text-search-status" style="align-self:center;padding-left:4px"></span>
       </div>
+      <textarea id="nt-Notes" class="notes-editor-textarea" rows="12"></textarea>
     </div>
     <div class="modal-btns">
       <button onclick="saveSubRecord('notes')">💾 Save</button>
