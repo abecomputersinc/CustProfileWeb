@@ -102,6 +102,7 @@ app.get('/api/customers/:phone', async (req, res) => {
       .query('SELECT * FROM Customer WHERE Phone_num=@phone');
     if (!result.recordset.length) return res.status(404).json({ error: 'Not found' });
     const row = result.recordset[0];
+    row._ts = row.Last_Modified_Date ? new Date(row.Last_Modified_Date).toISOString() : null;
     fmtDateRow(row, ['Installation_Date','Last_Modified_Date','Warranty_Expiry_DateHW','Warranty_Expiry_DateSF']);
     res.json(row);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -234,7 +235,7 @@ app.get('/api/calllog', async (req, res) => {
   try {
     const pool = await getPool();
     const { phone, dateFrom, dateTo } = req.query;
-    let query = 'SELECT Phone_num,SeqNo,CallDate,CallTime,ServHour,Subject,Action,Via,Response,Status,Remark FROM CallLog';
+    let query = 'SELECT Phone_num,SeqNo,CallDate,CallTime,ServHour,Subject,Action,Via,Response,Status,Remark,Last_Modified_Date FROM CallLog';
     const request = pool.request();
     const conds = [];
     if (phone)    { conds.push('Phone_num=@phone');        request.input('phone',    sql.NVarChar, phone); }
@@ -243,7 +244,11 @@ app.get('/api/calllog', async (req, res) => {
     if (conds.length) query += ' WHERE ' + conds.join(' AND ');
     query += ' ORDER BY CallDate DESC, CallTime DESC';
     const result = await request.query(query);
-    result.recordset.forEach(r => fmtDateRow(r, ['CallDate', 'CallTime']));
+    result.recordset.forEach(r => {
+      r._ts = r.Last_Modified_Date ? new Date(r.Last_Modified_Date).toISOString() : null;
+      delete r.Last_Modified_Date;
+      fmtDateRow(r, ['CallDate', 'CallTime']);
+    });
     res.json(result.recordset);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -325,6 +330,10 @@ app.get('/api/hardware', async (req, res) => {
     if (phone) { query += ' WHERE Phone_num=@phone'; request.input('phone', sql.NVarChar, phone); }
     query += ' ORDER BY SeqNo';
     const result = await request.query(query);
+    result.recordset.forEach(r => {
+      r._ts = r.Last_Modified_Date ? new Date(r.Last_Modified_Date).toISOString() : null;
+      delete r.Last_Modified_Date;
+    });
     res.json(result.recordset);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -416,7 +425,11 @@ app.get('/api/hwrma', async (req, res) => {
     if (conds.length) query += ' WHERE ' + conds.join(' AND ');
     query += ' ORDER BY IssueDate DESC';
     const result = await request.query(query);
-    result.recordset.forEach(r => fmtDateRow(r, ['IssueDate','ShipDate','ReturnDate']));
+    result.recordset.forEach(r => {
+      r._ts = r.Last_Modified_Date ? new Date(r.Last_Modified_Date).toISOString() : null;
+      delete r.Last_Modified_Date;
+      fmtDateRow(r, ['IssueDate','ShipDate','ReturnDate']);
+    });
     res.json(result.recordset);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -521,7 +534,11 @@ app.get('/api/swfix', async (req, res) => {
     if (conds.length) query += ' WHERE ' + conds.join(' AND ');
     query += ' ORDER BY IssueDate DESC';
     const result = await request.query(query);
-    result.recordset.forEach(r => fmtDateRow(r, ['IssueDate']));
+    result.recordset.forEach(r => {
+      r._ts = r.Last_Modified_Date ? new Date(r.Last_Modified_Date).toISOString() : null;
+      delete r.Last_Modified_Date;
+      fmtDateRow(r, ['IssueDate']);
+    });
     res.json(result.recordset);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -588,7 +605,10 @@ app.get('/api/notes', async (req, res) => {
     const pool = await getPool();
     const result = await pool.request()
       .query('SELECT ID, CAST(Notes AS NVARCHAR(MAX)) AS Notes, UpdTime FROM Notes ORDER BY UpdTime DESC');
-    result.recordset.forEach(r => fmtDateRow(r, ['UpdTime']));
+    result.recordset.forEach(r => {
+      r._ts = r.UpdTime ? new Date(r.UpdTime).toISOString() : null;
+      fmtDateRow(r, ['UpdTime']);
+    });
     res.json(result.recordset);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
