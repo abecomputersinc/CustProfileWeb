@@ -252,26 +252,29 @@ app.post('/api/calllog', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    const seqRes = await pool.request()
-      .input('phone', sql.NVarChar, d.Phone_num)
-      .query("SELECT ISNULL(MAX(CAST(SeqNo AS INT)),0)+1 AS NextSeq FROM CallLog WHERE Phone_num=@phone");
-    const nextSeq = String(seqRes.recordset[0].NextSeq).padStart(3, '0');
-    const callDate = parseDate(d.CallDate) || new Date();
-    const callTime = parseDate(d.CallDate) || new Date();
-    await pool.request()
-      .input('Phone_num', sql.NVarChar, d.Phone_num)
-      .input('SeqNo', sql.NVarChar, nextSeq)
-      .input('CallDate', sql.DateTime, callDate)
-      .input('CallTime', sql.DateTime, callTime)
-      .input('ServHour', sql.Real, parseFloat(d.ServHour) || 0)
-      .input('Subject', sql.NVarChar, d.Subject || '')
-      .input('Action', sql.NVarChar, d.Action || '')
-      .input('Via', sql.NVarChar, d.Via || '')
-      .input('Response', sql.NVarChar, d.Response || '')
-      .input('Status', sql.NVarChar, d.Status || '')
-      .input('Remark', sql.NVarChar, d.Remark || '')
-      .query(`INSERT INTO CallLog (Phone_num,SeqNo,CallDate,CallTime,ServHour,Subject,Action,Via,Response,Status,Remark)
-              VALUES (@Phone_num,@SeqNo,@CallDate,@CallTime,@ServHour,@Subject,@Action,@Via,@Response,@Status,@Remark)`);
+    const nextSeq = await withSerializable(pool, async (transaction) => {
+      const seqRes = await transaction.request()
+        .input('phone', sql.NVarChar, d.Phone_num)
+        .query("SELECT ISNULL(MAX(CAST(SeqNo AS INT)),0)+1 AS NextSeq FROM CallLog WHERE Phone_num=@phone");
+      const seq = String(seqRes.recordset[0].NextSeq).padStart(3, '0');
+      const callDate = parseDate(d.CallDate) || new Date();
+      await transaction.request()
+        .input('Phone_num', sql.NVarChar, d.Phone_num)
+        .input('SeqNo', sql.NVarChar, seq)
+        .input('CallDate', sql.DateTime, callDate)
+        .input('CallTime', sql.DateTime, callDate)
+        .input('ServHour', sql.Real, parseFloat(d.ServHour) || 0)
+        .input('Subject', sql.NVarChar, d.Subject || '')
+        .input('Action', sql.NVarChar, d.Action || '')
+        .input('Via', sql.NVarChar, d.Via || '')
+        .input('Response', sql.NVarChar, d.Response || '')
+        .input('Status', sql.NVarChar, d.Status || '')
+        .input('Remark', sql.NVarChar, d.Remark || '')
+        .input('Last_Modified_Date', sql.DateTime, new Date())
+        .query(`INSERT INTO CallLog (Phone_num,SeqNo,CallDate,CallTime,ServHour,Subject,Action,Via,Response,Status,Remark,Last_Modified_Date)
+                VALUES (@Phone_num,@SeqNo,@CallDate,@CallTime,@ServHour,@Subject,@Action,@Via,@Response,@Status,@Remark,@Last_Modified_Date)`);
+      return seq;
+    });
     res.json({ ok: true, SeqNo: nextSeq });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
