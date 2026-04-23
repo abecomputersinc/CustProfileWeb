@@ -351,10 +351,23 @@ input[type="checkbox"] { width: auto; height: auto; }
   transform: scale(var(--ui-scale));
   transform-origin: center center;
 }
+.settings-modal {
+  width: min(600px, calc((100vw - 40px) / var(--ui-scale)));
+  height: calc((100vh - 40px) / var(--ui-scale));
+  max-height: calc((100vh - 40px) / var(--ui-scale));
+}
 .modal-body {
   padding: 8px;
   overflow-y: auto;
   flex: 1;
+}
+.settings-modal-body {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.settings-modal-body .settings-grid-wrap {
+  max-height: none;
 }
 .full-page-modal {
   width: calc((100vw - 12px) / var(--ui-scale));
