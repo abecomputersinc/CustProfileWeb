@@ -130,7 +130,6 @@ function renderCustGrid() {
     tr.dataset.index = i;
     tr.innerHTML = `<td>${esc(c.Phone_num)}</td><td>${esc(c.Cust_Name||'')}</td>`;
     tr.onclick = () => selectCustomer(i);
-    tr.ondblclick = () => { selectCustomer(i); openCustModal('edit'); };
     tbody.appendChild(tr);
   });
   updateCustNav();
