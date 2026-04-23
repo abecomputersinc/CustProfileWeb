@@ -53,6 +53,7 @@ function fmtDateRow(row, fields) {
   fields.forEach(f => { if (row[f] !== undefined) row[f] = fmtDate(row[f]); });
   return row;
 }
+
 async function withSerializable(pool, fn) {
   const transaction = new sql.Transaction(pool);
   await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
@@ -61,7 +62,11 @@ async function withSerializable(pool, fn) {
     await transaction.commit();
     return result;
   } catch (e) {
-    await transaction.rollback();
+    try {
+      await transaction.rollback();
+    } catch (_) {
+      // rollback failed (server already aborted); ignore
+    }
     throw e;
   }
 }
