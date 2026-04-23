@@ -190,6 +190,9 @@ body {
   overflow: hidden;
   resize: none;
 }
+.remote-launch-field {
+  cursor: pointer;
+}
 .field-grid {
   display: grid;
   grid-template-columns: 110px 1fr 110px 1fr;

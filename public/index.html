@@ -152,12 +152,12 @@
                 <input type="text" id="d-Installation_Date" class="readonly" readonly>
                 <span class="flabel">AnyDesk:</span>
                 <div style="display:flex;gap:3px;align-items:center">
-                  <input type="text" id="d-AnyDesk" class="readonly" readonly style="flex:1">
+                  <input type="text" id="d-AnyDesk" class="readonly remote-launch-field" readonly style="flex:1" ondblclick="openRemote('anydesk')" title="Double-click to open AnyDesk">
                   <button onclick="openRemote('anydesk')" title="Connect via AnyDesk" style="min-width:0;padding:1px 5px;height:20px;font-size:10px">▶</button>
                 </div>
                 <span class="flabel">RustDesk:</span>
                 <div style="display:flex;gap:3px;align-items:center">
-                  <input type="text" id="d-RustDesk" class="readonly" readonly style="flex:1">
+                  <input type="text" id="d-RustDesk" class="readonly remote-launch-field" readonly style="flex:1" ondblclick="openRemote('rustdesk')" title="Double-click to open RustDesk">
                   <button onclick="openRemote('rustdesk')" title="Connect via RustDesk" style="min-width:0;padding:1px 5px;height:20px;font-size:10px">▶</button>
                 </div>
               </div>
