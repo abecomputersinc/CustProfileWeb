@@ -347,15 +347,21 @@ input[type="checkbox"] { width: auto; height: auto; }
   display: flex;
   flex-direction: column;
 }
+.scaled-modal {
+  transform: scale(var(--ui-scale));
+  transform-origin: center center;
+}
 .modal-body {
   padding: 8px;
   overflow-y: auto;
   flex: 1;
 }
 .full-page-modal {
-  width: calc(100vw - 12px);
-  height: calc(100vh - 12px);
-  max-height: calc(100vh - 12px);
+  width: calc((100vw - 12px) / var(--ui-scale));
+  height: calc((100vh - 12px) / var(--ui-scale));
+  max-height: calc((100vh - 12px) / var(--ui-scale));
+  transform: scale(var(--ui-scale));
+  transform-origin: center center;
 }
 .notes-page-body,
 .notes-editor-body {
