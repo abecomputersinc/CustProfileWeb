@@ -53,6 +53,18 @@ function fmtDateRow(row, fields) {
   fields.forEach(f => { if (row[f] !== undefined) row[f] = fmtDate(row[f]); });
   return row;
 }
+async function withSerializable(pool, fn) {
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
+  try {
+    const result = await fn(transaction);
+    await transaction.commit();
+    return result;
+  } catch (e) {
+    await transaction.rollback();
+    throw e;
+  }
+}
 
 // ─── CUSTOMER ─────────────────────────────────────────────────────────────────
 app.get('/api/customers', async (req, res) => {
