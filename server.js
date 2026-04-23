@@ -333,28 +333,32 @@ app.post('/api/hardware', async (req, res) => {
   try {
     const pool = await getPool();
     const d = req.body;
-    const seqRes = await pool.request()
-      .query("SELECT ISNULL(MAX(CAST(SeqNo AS INT)), 100) AS maxSeq FROM Hardware");
-    let nextSeq = seqRes.recordset[0].maxSeq + 1;
-    await pool.request()
-      .input('Phone_num', sql.NVarChar, d.Phone_num)
-      .input('SeqNo', sql.NVarChar, String(nextSeq))
-      .input('Device_Name', sql.NVarChar, d.Device_Name || '')
-      .input('MotherBoard', sql.NVarChar, d.MotherBoard || '')
-      .input('CPU', sql.NVarChar, d.CPU || '')
-      .input('Memory', sql.NVarChar, d.Memory || '')
-      .input('HDD', sql.NVarChar, d.HDD || '')
-      .input('Monitor', sql.NVarChar, d.Monitor || '')
-      .input('KB', sql.NVarChar, d.KB || '')
-      .input('GraphicCard', sql.NVarChar, d.GraphicCard || '')
-      .input('Printer', sql.NVarChar, d.Printer || '')
-      .input('Scanner', sql.NVarChar, d.Scanner || '')
-      .input('CashDrawer', sql.NVarChar, d.CashDrawer || '')
-      .input('Others', sql.NVarChar, d.Others || '')
-      .input('CustomerProvide', sql.NVarChar, d.CustomerProvide || '')
-      .input('BorrowTo', sql.NVarChar, d.BorrowTo || '')
-      .query(`INSERT INTO Hardware (Phone_num,SeqNo,Device_Name,MotherBoard,CPU,Memory,HDD,Monitor,KB,GraphicCard,Printer,Scanner,CashDrawer,Others,CustomerProvide,BorrowTo)
-              VALUES (@Phone_num,@SeqNo,@Device_Name,@MotherBoard,@CPU,@Memory,@HDD,@Monitor,@KB,@GraphicCard,@Printer,@Scanner,@CashDrawer,@Others,@CustomerProvide,@BorrowTo)`);
+    const nextSeq = await withSerializable(pool, async (transaction) => {
+      const seqRes = await transaction.request()
+        .query("SELECT ISNULL(MAX(CAST(SeqNo AS INT)), 100) AS maxSeq FROM Hardware");
+      const seq = seqRes.recordset[0].maxSeq + 1;
+      await transaction.request()
+        .input('Phone_num', sql.NVarChar, d.Phone_num)
+        .input('SeqNo', sql.NVarChar, String(seq))
+        .input('Device_Name', sql.NVarChar, d.Device_Name || '')
+        .input('MotherBoard', sql.NVarChar, d.MotherBoard || '')
+        .input('CPU', sql.NVarChar, d.CPU || '')
+        .input('Memory', sql.NVarChar, d.Memory || '')
+        .input('HDD', sql.NVarChar, d.HDD || '')
+        .input('Monitor', sql.NVarChar, d.Monitor || '')
+        .input('KB', sql.NVarChar, d.KB || '')
+        .input('GraphicCard', sql.NVarChar, d.GraphicCard || '')
+        .input('Printer', sql.NVarChar, d.Printer || '')
+        .input('Scanner', sql.NVarChar, d.Scanner || '')
+        .input('CashDrawer', sql.NVarChar, d.CashDrawer || '')
+        .input('Others', sql.NVarChar, d.Others || '')
+        .input('CustomerProvide', sql.NVarChar, d.CustomerProvide || '')
+        .input('BorrowTo', sql.NVarChar, d.BorrowTo || '')
+        .input('Last_Modified_Date', sql.DateTime, new Date())
+        .query(`INSERT INTO Hardware (Phone_num,SeqNo,Device_Name,MotherBoard,CPU,Memory,HDD,Monitor,KB,GraphicCard,Printer,Scanner,CashDrawer,Others,CustomerProvide,BorrowTo,Last_Modified_Date)
+                VALUES (@Phone_num,@SeqNo,@Device_Name,@MotherBoard,@CPU,@Memory,@HDD,@Monitor,@KB,@GraphicCard,@Printer,@Scanner,@CashDrawer,@Others,@CustomerProvide,@BorrowTo,@Last_Modified_Date)`);
+      return seq;
+    });
     res.json({ ok: true, SeqNo: String(nextSeq) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
