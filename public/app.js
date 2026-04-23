@@ -48,8 +48,12 @@ function updateClock() {
 function syncInstallationSummaryHeight() {
   const textarea = document.getElementById('d-InstallationSummary');
   if (!textarea) return;
+  const styles = window.getComputedStyle(textarea);
+  const lineHeight = parseFloat(styles.lineHeight);
+  const fontSize = parseFloat(styles.fontSize) || 11;
+  const extraBottomSpace = Math.ceil(Number.isFinite(lineHeight) ? lineHeight : fontSize * 1.2);
   textarea.style.height = 'auto';
-  textarea.style.height = `${Math.max(textarea.scrollHeight, 80)}px`;
+  textarea.style.height = `${Math.max(textarea.scrollHeight + extraBottomSpace, 80)}px`;
 }
 
 function queueInstallationSummaryResize() {
