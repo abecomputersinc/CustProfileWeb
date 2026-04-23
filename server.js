@@ -435,27 +435,31 @@ app.post('/api/hwrma', async (req, res) => {
     const pool = await getPool();
     const d = req.body;
     const issueDate = parseDate(d.IssueDate) || new Date();
-    const rmaNo = await getNextRMANo(pool.request(), issueDate);
-    await pool.request()
-      .input('Phone_num', sql.NVarChar, d.Phone_num)
-      .input('RMANo', sql.NVarChar, rmaNo)
-      .input('IssueDate', sql.DateTime, issueDate)
-      .input('Status', sql.NVarChar, d.Status || 'Open')
-      .input('DeviceName', sql.NVarChar, d.DeviceName || '')
-      .input('Problem', sql.NVarChar, d.Problem || '')
-      .input('cAction', sql.NVarChar, d.cAction || '')
-      .input('HandleBy', sql.NVarChar, d.HandleBy || '')
-      .input('RepairBy', sql.NVarChar, d.RepairBy || '')
-      .input('VendorRMANo', sql.NVarChar, d.VendorRMANo || '')
-      .input('ShipDate', sql.DateTime, parseDate(d.ShipDate))
-      .input('ReturnDate', sql.DateTime, parseDate(d.ReturnDate))
-      .input('BorrowFrom', sql.NVarChar, d.BorrowFrom || '')
-      .input('OldSN', sql.NVarChar, d.OldSN || '')
-      .input('NewSN', sql.NVarChar, d.NewSN || '')
-      .input('DeliveryMethod', sql.NVarChar, d.DeliveryMethod || '')
-      .input('Remark', sql.NVarChar, d.Remark || '')
-      .query(`INSERT INTO HWRMA (Phone_num,RMANo,IssueDate,Status,DeviceName,Problem,cAction,HandleBy,RepairBy,VendorRMANo,ShipDate,ReturnDate,BorrowFrom,OldSN,NewSN,DeliveryMethod,Remark)
-              VALUES (@Phone_num,@RMANo,@IssueDate,@Status,@DeviceName,@Problem,@cAction,@HandleBy,@RepairBy,@VendorRMANo,@ShipDate,@ReturnDate,@BorrowFrom,@OldSN,@NewSN,@DeliveryMethod,@Remark)`);
+    let rmaNo;
+    await withSerializable(pool, async (transaction) => {
+      rmaNo = await getNextRMANo(transaction.request(), issueDate);
+      await transaction.request()
+        .input('Phone_num', sql.NVarChar, d.Phone_num)
+        .input('RMANo', sql.NVarChar, rmaNo)
+        .input('IssueDate', sql.DateTime, issueDate)
+        .input('Status', sql.NVarChar, d.Status || 'Open')
+        .input('DeviceName', sql.NVarChar, d.DeviceName || '')
+        .input('Problem', sql.NVarChar, d.Problem || '')
+        .input('cAction', sql.NVarChar, d.cAction || '')
+        .input('HandleBy', sql.NVarChar, d.HandleBy || '')
+        .input('RepairBy', sql.NVarChar, d.RepairBy || '')
+        .input('VendorRMANo', sql.NVarChar, d.VendorRMANo || '')
+        .input('ShipDate', sql.DateTime, parseDate(d.ShipDate))
+        .input('ReturnDate', sql.DateTime, parseDate(d.ReturnDate))
+        .input('BorrowFrom', sql.NVarChar, d.BorrowFrom || '')
+        .input('OldSN', sql.NVarChar, d.OldSN || '')
+        .input('NewSN', sql.NVarChar, d.NewSN || '')
+        .input('DeliveryMethod', sql.NVarChar, d.DeliveryMethod || '')
+        .input('Remark', sql.NVarChar, d.Remark || '')
+        .input('Last_Modified_Date', sql.DateTime, new Date())
+        .query(`INSERT INTO HWRMA (Phone_num,RMANo,IssueDate,Status,DeviceName,Problem,cAction,HandleBy,RepairBy,VendorRMANo,ShipDate,ReturnDate,BorrowFrom,OldSN,NewSN,DeliveryMethod,Remark,Last_Modified_Date)
+                VALUES (@Phone_num,@RMANo,@IssueDate,@Status,@DeviceName,@Problem,@cAction,@HandleBy,@RepairBy,@VendorRMANo,@ShipDate,@ReturnDate,@BorrowFrom,@OldSN,@NewSN,@DeliveryMethod,@Remark,@Last_Modified_Date)`);
+    });
     res.json({ ok: true, RMANo: rmaNo });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
