@@ -37,11 +37,23 @@ window.addEventListener('DOMContentLoaded', () => {
   updateClock();
   setInterval(updateClock, 1000);
 });
+window.addEventListener('resize', queueInstallationSummaryResize);
 
 function updateClock() {
   const now = new Date();
   document.getElementById('sb-time').textContent =
     now.toLocaleDateString() + '  ' + now.toLocaleTimeString();
+}
+
+function syncInstallationSummaryHeight() {
+  const textarea = document.getElementById('d-InstallationSummary');
+  if (!textarea) return;
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.max(textarea.scrollHeight, 80)}px`;
+}
+
+function queueInstallationSummaryResize() {
+  requestAnimationFrame(syncInstallationSummaryHeight);
 }
 
 function todayStr() {
@@ -198,6 +210,7 @@ function showCustomerFields(cust) {
     const el = document.getElementById('d-' + f);
     if (el) el.value = cust[f] || '';
   });
+  queueInstallationSummaryResize();
 }
 
 // ─── CUSTOMER CRUD ────────────────────────────────────────────────────────────
@@ -317,6 +330,7 @@ function switchTab(tab) {
   });
   const tc = document.getElementById('tab-' + tab);
   if (tc) { tc.classList.add('active'); tc.style.display = 'flex'; }
+  if (tab === 'custinfo') queueInstallationSummaryResize();
   loadTab(tab);
 }
 

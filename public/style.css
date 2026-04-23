@@ -177,6 +177,19 @@ body {
   position: absolute; top: -7px; left: 6px;
   background: #d4d0c8; padding: 0 2px; font-size: 10px;
 }
+.installation-summary-frame {
+  margin: 0 4px 3px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.installation-summary-textarea {
+  width: 100%;
+  margin-top: 4px;
+  min-height: 80px;
+  overflow: hidden;
+  resize: none;
+}
 .field-grid {
   display: grid;
   grid-template-columns: 110px 1fr 110px 1fr;
