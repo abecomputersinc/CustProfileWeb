@@ -5,6 +5,9 @@ const state = {
   selectedPhone: null,
   currentTab: 'calllog',
   editMode: null,   // 'add' | 'edit'
+  custTs: null,
+  custEditTs: null,
+  custEditLoaded: false,
   subEditMode: null,
   subSelected: null,  // selected row data for each tab
   lookup: { city:[], engineer:[], industry:[], swname:[], serviceday:[], servicehr:[] },
@@ -141,6 +144,7 @@ function renderCustGrid() {
 function selectCustomer(index) {
   state.custIndex = index;
   state.selectedPhone = state.customers[index]?.Phone_num;
+  state.custTs = null;
   highlightCustRow(index);
   updateCustNav();
   document.getElementById('btn-edit-cust').disabled = false;
@@ -173,6 +177,7 @@ function custNav(dir) {
 async function loadCustomerDetail(phone) {
   try {
     const cust = await GET(`/api/customers/${encodeURIComponent(phone)}`);
+    state.custTs = cust._ts || null;
     showCustomerFields(cust);
     switchTab('custinfo');
   } catch(e) {
@@ -197,6 +202,8 @@ function showCustomerFields(cust) {
 // ─── CUSTOMER CRUD ────────────────────────────────────────────────────────────
 function openCustModal(mode) {
   state.editMode = mode;
+  state.custEditTs = null;
+  state.custEditLoaded = mode === 'add';
   document.getElementById('modal-cust-title').textContent = mode === 'add' ? 'Add Customer' : 'Edit Customer';
 
   // Repopulate dropdowns in case lookups changed
@@ -217,13 +224,19 @@ function openCustModal(mode) {
   } else {
     if (!state.selectedPhone) return alert('Please select a customer first.');
     const cust = state.customers[state.custIndex];
+    state.custEditTs = state.custTs;
     custFields.forEach(f => {
       const el = document.getElementById('m-'+f);
       if (el) el.value = cust[f] || '';
     });
     // Reload full record to populate all fields including dropdowns
     GET(`/api/customers/${encodeURIComponent(state.selectedPhone)}`).then(full => {
+      state.custEditTs = full._ts || null;
+      state.custEditLoaded = true;
       custFields.forEach(f => { const el = document.getElementById('m-'+f); if (el) el.value = full[f] || ''; });
+    }).catch(e => {
+      alert('Error loading customer: ' + e.message);
+      closeModal('modal-cust');
     });
     document.getElementById('m-Phone_num').readOnly = true;
   }
@@ -251,6 +264,8 @@ async function saveCust() {
       await POST('/api/customers', d);
       setStatus('Customer added.');
     } else {
+      if (!state.custEditLoaded) return alert('Customer is still loading. Please wait before saving.');
+      if (state.custEditTs) d._ts = state.custEditTs;
       await PUT(`/api/customers/${encodeURIComponent(state.selectedPhone)}`, d);
       setStatus('Customer updated.');
     }
@@ -260,6 +275,10 @@ async function saveCust() {
     const idx = state.customers.findIndex(c => c.Phone_num === d.Phone_num);
     if (idx >= 0) selectCustomer(idx);
   } catch(e) {
+    if (e.message === 'conflict') {
+      alert('This customer was modified by another user. Please close and reopen it before saving.');
+      return;
+    }
     alert('Error: ' + e.message);
   }
 }
